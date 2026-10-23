@@ -66,6 +66,10 @@ export const frogs: SceneDef = {
       o.summary = 'カエルを眠らせて通り抜けた';
       return outcome(o);
     }
+    if (r.hid) {
+      o.summary = '灰にまぎれてカエルから逃れた';
+      return outcome(o);
+    }
     if (r.defeated) {
       o.log.push('カエルたちはぴょんぴょんと池の奥へ逃げていった。');
       o.summary = 'カエルの群れを追い払った';

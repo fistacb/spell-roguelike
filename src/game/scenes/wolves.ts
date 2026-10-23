@@ -59,14 +59,17 @@ export const wolves: SceneDef = {
       intent,
       bonusDamage: bonus,
       extraMult: thunderInWater ? { mult: 2, line: '谷川を渡る狼たちが感電した！' } : undefined,
-      noAttack: intent.inWater && frozen ? '狼たちは凍った谷川で次々にすべって転んだ！'
-        : spell.tricks.includes('ash') ? '✦ 灰で匂いが消えて、狼たちはこちらを見失った。' : undefined,
+      noAttack: intent.inWater && frozen ? '狼たちは凍った谷川で次々にすべって転んだ！' : undefined,
     });
     if (thunderInWater) o.discoveries.push('雷×川を渡る敵：感電して2倍');
     if (spell.shapes.includes('rain') && spell.target !== 'bridge') o.discoveries.push('雨×群れ：全員に当たってよく効く');
     absorb(o, r);
     if (r.slept) {
       o.summary = '狼の群れを眠らせて通り抜けた';
+      return outcome(o);
+    }
+    if (r.hid) {
+      o.summary = '灰にまぎれて狼の群れから逃れた';
       return outcome(o);
     }
     o.summary = r.defeated ? '狼の群れを追い払った' : '狼の群れから逃げ切った';

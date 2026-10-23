@@ -40,7 +40,7 @@ export const bear: SceneDef = {
       o.discoveries.push('響き×眠る熊：大きな音で起きてしまう');
       const r = fight(spell, { enemy: BEAR, intent: ctx.intent! });
       absorb(o, r);
-      o.summary = r.defeated ? '熊を追い払った' : '響きで熊を起こしてしまった';
+      o.summary = r.defeated ? '熊を追い払った' : r.hid ? '灰にまぎれて起きた熊から逃れた' : '響きで熊を起こしてしまった';
       return outcome(o);
     }
     if (target === 'hive' && spell.supports.includes('pull')) {
@@ -113,6 +113,10 @@ export const bear: SceneDef = {
           absorb(o, r);
           if (r.slept) {
             o.summary = '熊を眠らせて通り抜けた';
+            return outcome(o);
+          }
+          if (r.hid) {
+            o.summary = '灰にまぎれて熊から逃れた';
             return outcome(o);
           }
           o.summary = r.defeated ? '熊を追い払った' : '熊に襲われた';

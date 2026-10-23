@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cast, currentScene, forget, handSize, INN_HEARTS, MAX_HEARTS, newRun, START_CHAR_LIMIT, START_HEARTS, type RunState } from '../src/game/run';
 import { buildStage, SCENES, STAGE_COUNT, STAGE_LENGTH } from '../src/game/scenes';
-import { HAND_LIMIT, STARTING_WORDS } from '../src/game/words';
+import { FIZZLE, HAND_LIMIT, STARTING_WORDS } from '../src/game/words';
 
 const first = () => 0; // 予告は候補の1つめ
 const stage1 = ['rockfall', 'imp', 'barn', 'crows', 'valley'];
@@ -172,5 +172,20 @@ describe('旅の進行', () => {
     run = forget(run, 'rain');
     expect(run.mustForget).toBe(false);
     expect(handSize(run.owned)).toBe(HAND_LIMIT);
+  });
+});
+
+describe('空振りの一言', () => {
+  it('効かなかった言葉には、使いどころをほのめかす一言が出る', () => {
+    let run = newRun(first, stage1);
+    run = { ...run, owned: [...run.owned, 'ash'] };
+    run = cast(run, '岩に雷槍灰').run;
+    expect(run.log).toContain(FIZZLE.ash.line);
+  });
+  it('効いた言葉には出ない', () => {
+    let run = newRun(first, ['slime', 'barn', 'crows', 'fog', 'fox']);
+    run = { ...run, owned: [...run.owned, 'ash'] };
+    run = cast(run, '灰').run;
+    expect(run.log).not.toContain(FIZZLE.ash.line);
   });
 });

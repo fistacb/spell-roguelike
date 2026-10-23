@@ -35,7 +35,7 @@ export const bandits: SceneDef = {
       o.summary = '荷車を盾にして逃げ切った';
       return outcome(o);
     }
-    if (spell.tricks.includes('ash') || (spell.tricks.includes('smoke') && !isAttack(spell))) {
+    if ((spell.tricks.includes('ash') || spell.tricks.includes('smoke')) && !isAttack(spell)) {
       o.log.push(spell.tricks.includes('ash') ? '✦ 灰を巻き上げて、足跡を消した。' : '✦ 煙があたりに立ちこめた。', '盗賊たちは見当違いの方向を探している。そのすきに逃げ切った。');
       o.discoveries.push('煙・灰×盗賊：見失わせて逃げ切る');
       o.summary = '盗賊たちをまいて逃げ切った';
@@ -50,6 +50,10 @@ export const bandits: SceneDef = {
     absorb(o, r);
     if (r.slept) {
       o.summary = '盗賊たちを眠らせて通り抜けた';
+      return outcome(o);
+    }
+    if (r.hid) {
+      o.summary = '灰にまぎれて盗賊たちから逃れた';
       return outcome(o);
     }
     const hurtPeople = r.damage > 0 && !(spell.shapes.length > 0 && spell.shapes.every((s) => s === 'chain'));

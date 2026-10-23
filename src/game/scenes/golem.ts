@@ -53,6 +53,10 @@ export const golem: SceneDef = {
       o.summary = 'ゴーレムを眠らせて通り抜けた';
       return outcome(o);
     }
+    if (r.hid) {
+      o.summary = '灰にまぎれてゴーレムから逃れた';
+      return outcome(o);
+    }
     if (r.defeated) {
       o.gainWords.push('gravel');
       o.log.push('崩れたゴーレムのかけらが、ざらざらと足もとに転がった。');
