@@ -1,5 +1,6 @@
 // カエルの合唱：池のカエルの群れが、縄張りに入った旅人に跳びかかってくる
 
+import { isAttack } from '../parse';
 import { emptyOutcome, absorb, fight, outcome, spellMultiplier, type Enemy, type SceneDef } from '../scene';
 
 // 群れなので雨がよく効くが、水が好きで雨では元気になってしまう
@@ -24,6 +25,14 @@ export const frogs: SceneDef = {
     const o = emptyOutcome();
     let bonus = 0;
     let noAttack: string | undefined;
+
+    // 静けさの中では、合唱が止まる
+    if (spell.tricks.includes('quiet') && !isAttack(spell)) {
+      o.log.push('✦ あたりがしんとした。カエルたちは歌うのをやめて、きょとんとしている。', 'そのすきに、池のほとりを通り抜けた。');
+      o.discoveries.push('静けさ×カエル：合唱が止まって、通り抜けられる');
+      o.summary = 'カエルの合唱を静めて通り抜けた';
+      return outcome(o);
+    }
 
     if (spell.shapes.includes('rain') && !spell.elements.includes('thunder') && !spell.elements.includes('ice') && !spell.pure) {
       o.log.push('雨を浴びて、カエルたちはますます元気になった！');

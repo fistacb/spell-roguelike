@@ -71,12 +71,14 @@ export const fox: SceneDef = {
         }
         return outcome(bitten(o, '穴の土がぱらぱらと落ちた。'));
       case 'vixen':
-        if (spell.supports.includes('heal') || spell.supports.includes('sleep')) {
-          o.log.push(spell.supports.includes('sleep') ? '✦ 母ぎつねは丸くなって眠りこんだ。' : '母ぎつねの気持ちが少し落ち着いたようだ。');
+        if (spell.supports.includes('heal') || spell.supports.includes('sleep') || (spell.tricks.includes('quiet') && !isAttack(spell))) {
+          o.log.push(spell.supports.includes('sleep') ? '✦ 母ぎつねは丸くなって眠りこんだ。'
+            : spell.supports.includes('heal') ? '母ぎつねの気持ちが少し落ち着いたようだ。'
+            : '✦ あたりがしんとして、母ぎつねの逆立った毛がゆっくりと寝ていった。');
           if (spell.supports.includes('sleep')) o.gainWords.push('quiet');
           o.log.push('その間に穴のふちに枝を差しこむと、子ぎつねがよじ登ってきた。', THANKS);
           o.hearts += 1;
-          o.discoveries.push('眠り・癒し×母ぎつね：落ち着いて、子ぎつねを助けさせてくれる');
+          o.discoveries.push('眠り・癒し・静けさ×母ぎつね：落ち着いて、子ぎつねを助けさせてくれる');
           o.summary = '母ぎつねを落ち着かせて子ぎつねを助けた';
           return outcome(o);
         }

@@ -71,7 +71,7 @@ export const WORDS: Word[] = [
     flash: '泥がべったりとまとわりついた！',
   },
   {
-    id: 'storm', text: '嵐', kind: 'compound', element: 'thunder', shapes: ['rain', 'rain'],
+    id: 'storm', text: '嵐', kind: 'compound', element: 'thunder', shapes: ['rain'],
     hint: 'ごうごうと荒れ狂う。まわりのものまで巻きこみそう。',
     flash: '稲妻まじりの嵐が吹き荒れた！',
   },

@@ -269,10 +269,14 @@ describe('分かれ道', () => {
 
 describe('地域の言葉と混ざる言葉', () => {
   it('眠りは傷つけずにかけると敵が眠り、静けさが手に入る', () => {
-    const o = play('wolves', '狼に眠り', { intent: 1 });
+    const o = play('slime', 'スライムに眠り', { intent: 0 });
     expect(o.hearts).toBe(0);
-    expect(o.summary).toBe('狼の群れを眠らせて通り抜けた');
+    expect(o.summary).toBe('スライムを眠らせて通り抜けた');
     expect(o.gainWords).toContain('quiet');
+  });
+  it('突っこんでくる敵は勢いづいていて眠らない', () => {
+    expect(play('slime', 'スライムに眠り', { intent: 1 }).summary).not.toBe('スライムを眠らせて通り抜けた');
+    expect(play('wolves', '狼に眠り', { intent: 1 }).summary).not.toBe('狼の群れを眠らせて通り抜けた');
   });
   it('攻撃といっしょだと眠りは効かない', () => {
     expect(play('wolves', '狼に眠り槍', { intent: 1 }).summary).not.toBe('狼の群れを眠らせて通り抜けた');
@@ -312,7 +316,8 @@ describe('地域の言葉と混ざる言葉', () => {
     expect(play('imp', '蒸気', { intent: 1 }).hearts).toBe(0);
   });
   it('嵐は群れをまとめて吹き飛ばす', () => {
-    expect(play('frogs', '嵐', { intent: 0 }).summary).toBe('カエルの群れを追い払った');
+    expect(play('wolves', '嵐', { intent: 0 }).summary).toBe('狼の群れを追い払った');
+    expect(play('crows', '嵐', { intent: 0 }).summary).toBe('カラスの群れを追い払った');
   });
   it('風はカラスを飛べなくする', () => {
     expect(play('crows', '風').summary).toBe('向かい風でカラスを追い払った');
@@ -370,16 +375,28 @@ describe('新しい場面', () => {
 
 describe('灰', () => {
   it('攻撃せずにまくと、どの戦闘でも戦わずに抜けられる。言葉はもらえない', () => {
-    for (const id of ['imp', 'crows', 'slime', 'golem', 'frogs', 'wolves']) {
+    for (const id of ['imp', 'slime', 'golem', 'wolves']) {
       const o = play(id, '灰', { intent: 0 });
       expect(o.summary).toContain('灰にまぎれて');
       expect(o.hearts).toBe(0);
       expect(o.reward).toBeNull();
     }
   });
+  it('風の攻撃や水の中の敵には効かない', () => {
+    expect(play('crows', '灰', { intent: 0 }).summary).not.toContain('灰にまぎれて');
+    expect(play('frogs', '灰', { intent: 0 }).summary).not.toContain('灰にまぎれて');
+  });
   it('攻撃といっしょだと吹き散らされる', () => {
     const o = play('slime', '灰炎槍', { intent: 0 });
     expect(o.summary).not.toContain('灰にまぎれて');
     expect(o.log).toContain('灰が舞い上がったが、呪文の勢いで吹き散らされてしまった。');
+  });
+});
+
+describe('静けさ', () => {
+  it('森・川・街道でも使い道がある', () => {
+    expect(play('fox', '母ぎつねに静けさ').summary).toBe('母ぎつねを落ち着かせて子ぎつねを助けた');
+    expect(play('frogs', '静けさ', { intent: 1 }).summary).toBe('カエルの合唱を静めて通り抜けた');
+    expect(play('bandits', '静けさ', { intent: 0 }).summary).toBe('盗賊たちをまいて逃げ切った');
   });
 });

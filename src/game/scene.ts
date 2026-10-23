@@ -258,25 +258,36 @@ export function fight(spell: Spell, opts: FightOptions): FightResult {
 
   // 眠りは、傷つけずにかけたときだけ効く
   if (aimed && spell.supports.includes('sleep')) {
-    if (r.damage === 0) {
+    if (intent.charge) {
+      r.log.push(`${enemy.name}は勢いづいていて、眠るどころではない。`);
+      r.discoveries.push('眠り×突っこんでくる敵：勢いがついていて眠らない');
+    } else if (r.damage === 0) {
       r.slept = true;
       r.gainWords.push('quiet');
       r.log.push(`${FLASH}${enemy.name}のまぶたが下がり、すうすうと寝息を立てはじめた。`, 'その横を、そっと通り抜けた。');
       r.discoveries.push('眠り：傷つけずにかけると、敵が眠って通り抜けられる');
       return r;
+    } else {
+      r.log.push(`${enemy.name}は眠りかけたが、攻撃の痛みで目を覚ました。`);
     }
-    r.log.push(`${enemy.name}は眠りかけたが、攻撃の痛みで目を覚ました。`);
   }
 
   // 灰は、攻撃せずにまいたときだけ姿と匂いを隠してくれる
   if (spell.tricks.includes('ash')) {
-    if (r.damage === 0) {
+    if (intent.element === 'wind') {
+      r.log.push(`灰がふわりと舞ったが、${intent.name}の風にさらわれてしまった。`);
+      r.discoveries.push('灰×風の攻撃：吹き飛ばされて隠れられない');
+    } else if (intent.inWater) {
+      r.log.push('灰をまいたが、水しぶきで濡れて固まってしまった。');
+      r.discoveries.push('灰×水の中の敵：濡れて固まって隠れられない');
+    } else if (r.damage === 0) {
       r.hid = true;
       r.log.push(`${FLASH}灰がふわりと舞い上がり、姿も匂いも覆い隠した。`, `${enemy.name}がこちらを見失っているすきに、そっと離れた。`);
       r.discoveries.push('灰：攻撃せずにまくと、姿と匂いを消して戦わずに抜けられる');
       return r;
+    } else {
+      r.log.push('灰が舞い上がったが、呪文の勢いで吹き散らされてしまった。');
     }
-    r.log.push('灰が舞い上がったが、呪文の勢いで吹き散らされてしまった。');
   }
 
   // 倒せなかったら反撃を受ける
