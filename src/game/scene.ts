@@ -34,6 +34,8 @@ export interface Outcome {
   gainWords: string[];
   // うまく切り抜けたお礼の言葉。もう持っていればハート+1
   reward: string | null;
+  // 分かれ道で選んだ次の地域
+  route?: string;
   discoveries: string[];
   // 旅の記録に残す一言
   summary: string;

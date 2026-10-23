@@ -1,8 +1,9 @@
 import './style.css';
 import { countLength } from './game/parse';
-import { cast, currentScene, endingMessage, MAX_HEARTS, newRun, type RunState } from './game/run';
+import { cast, currentScene, endingMessage, MAX_HEARTS, newRun, regionName, type RunState } from './game/run';
+import { STAGE_COUNT } from './game/scenes';
 import type { SceneObject } from './game/scene';
-import { addRun, emptySave, loadSave, writeSave, type SaveData } from './game/save';
+import { addRun, clearJourney, emptySave, loadJourney, loadSave, writeJourney, writeSave, type SaveData } from './game/save';
 import { ELEMENT_INFO, wordById, wordColor } from './game/words';
 
 const app = document.getElementById('app')!;
@@ -30,6 +31,7 @@ function esc(text: string): string {
 function showTitle() {
   run = null;
   const wins = save.runs.filter((r) => r.result === 'win').length;
+  const saved = loadJourney<RunState>();
   app.innerHTML = `
     <div class="page">
       <h1>呪文ローグライク</h1>
@@ -42,6 +44,7 @@ function showTitle() {
           <li>どの場面も詠唱は1回だけ。結果で旅の続きが変わる。</li>
           <li>例：「岩に雷槍」「小川に氷」「土壁」「あいつに炎雨」</li>
           <li>場面にあるものはタップで調べられる。見つけた反応も確認できる。</li>
+          <li>旅は3つのステージ。ステージの終わりの宿で記録され、分かれ道で次の道を選ぶ。</li>
           <li>ハートがなくなると、旅はそこでおしまい。</li>
         </ul>
       </section>
@@ -49,10 +52,12 @@ function showTitle() {
         <h2>これまでの旅</h2>
         <p>${save.runs.length}回旅立ち、${wins}回新しい旅へ。見つけた反応：${save.discoveries.length}個</p>
       </section>
-      <button class="primary" id="start">旅に出る</button>
+      ${saved ? `<button class="primary" id="continue">旅の続き（ステージ${saved.stage + 1}の終わりの宿から）</button>` : ''}
+      <button class="${saved ? '' : 'primary'}" id="start">${saved ? '新しく旅に出る' : '旅に出る'}</button>
       <button id="reset">記録を消す</button>
     </div>`;
   document.getElementById('start')!.onclick = startRun;
+  if (saved) document.getElementById('continue')!.onclick = () => mountGame(saved);
   // confirm() が使えない環境があるので、2回押しで確定する
   const reset = document.getElementById('reset') as HTMLButtonElement;
   reset.onclick = () => {
@@ -70,7 +75,12 @@ function showTitle() {
 // ---- ゲーム画面 ----
 
 function startRun() {
-  run = newRun();
+  clearJourney();
+  mountGame(newRun());
+}
+
+function mountGame(state: RunState) {
+  run = state;
   selectedObject = null;
   pendingWarning = null;
   errorText = '';
@@ -99,6 +109,7 @@ function startRun() {
 
 function doCast(text: string) {
   if (!run) return;
+  const before = run.phase;
   const result = cast(run, text);
   errorText = result.error ?? '';
   run = result.run;
@@ -115,7 +126,10 @@ function doCast(text: string) {
   selectedObject = null;
   renderGame();
   glowCards(result.spell?.usedWordIds ?? []);
+  // 宿に着いたら、途中の旅を記録する
+  if (run.phase === 'fork' && before === 'scene') writeJourney(run);
   if (run.phase === 'record') {
+    clearJourney();
     save = addRun(save, {
       date: new Date().toISOString(),
       result: run.result === 'complete' ? 'win' : 'lose',
@@ -153,7 +167,7 @@ function renderHud() {
   document.getElementById('hud')!.innerHTML = `
     <span class="scene-name">${esc(scene.title)}</span>
     <span class="hearts" aria-label="ハート${r.hearts}つ">${hearts(r.hearts)}</span>
-    <span>${Math.min(r.index + 1, r.sceneIds.length)}/${r.sceneIds.length}場面</span>
+    <span>ステージ${r.stage + 1}/${STAGE_COUNT} ${esc(regionName(r))}${r.phase === 'fork' ? '' : ` ${Math.min(r.index + 1, r.sceneIds.length)}/${r.sceneIds.length}`}</span>
     <span>上限 ${r.charLimit}文字</span>`;
 }
 
@@ -209,6 +223,7 @@ function renderLog() {
     .map((line) => {
       if (line.startsWith('▶ ')) return `<p class="cast">${esc(line)}</p>`;
       if (line.startsWith('◆ ')) return `<p class="scene">${esc(line.slice(2))}</p>`;
+      if (line.startsWith('■ ')) return `<p class="stage">${esc(line.slice(2))}</p>`;
       return `<p>${esc(line)}</p>`;
     })
     .join('');
@@ -247,7 +262,7 @@ function renderCounter() {
   const n = countLength(input.value);
   counter.textContent = `${n}/${run.charLimit}`;
   counter.classList.toggle('over', n > run.charLimit);
-  const playable = run.phase === 'scene';
+  const playable = run.phase !== 'record';
   button.disabled = !playable || n === 0 || n > run.charLimit;
   input.disabled = !playable;
 }
