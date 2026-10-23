@@ -50,6 +50,10 @@ export const ferry: SceneDef = {
         }
         return outcome(swam(o, '川面に呪文が落ちたが、流れは変わらない。'));
       case 'boat':
+        if (spell.supports.includes('pull') || spell.supports.includes('flow')) {
+          return outcome(crossed(o, '渡し舟を動かして渡った', '引き寄せ・流れ×渡し舟：舟が動く',
+            '✦ 舟がすうっと岸に寄ってきた。乗りこむと、水の流れが向こう岸まで運んでくれた。'));
+        }
         if (spell.shapes.includes('chain')) {
           return outcome(crossed(o, '鎖で渡し舟をたぐり寄せて渡った', '鎖×渡し舟：たぐり寄せて自分で渡れる',
             '鎖を舟のロープに絡めて、ぐいぐいと向こう岸へたぐり寄せた。'));

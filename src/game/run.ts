@@ -5,7 +5,7 @@ import { pick, type Flags, type Intent, type Rng, type SceneDef } from './scene'
 import { buildStage, SCENES, STAGE_COUNT } from './scenes';
 import { makeCrossroads } from './scenes/crossroads';
 import { OPENABLE_REGIONS, REGIONS, type RegionId } from './scenes/regions';
-import { STARTING_WORDS, wordById } from './words';
+import { COMBOS, countsToHand, HAND_LIMIT, STARTING_WORDS, wordById } from './words';
 
 export const START_CHAR_LIMIT = 6;
 // 文字数の上限はステージが進むごとに増える
@@ -48,6 +48,8 @@ export interface RunState {
   discoveries: string[];
   records: SceneRecord[];
   taboos: string[];
+  // 手札があふれていて、忘れる言葉を選ぶ必要がある
+  mustForget: boolean;
 }
 
 export interface CastResult {
@@ -126,6 +128,7 @@ export function newRun(rng: Rng = Math.random, firstStage?: string[]): RunState 
     discoveries: [],
     records: [],
     taboos: [],
+    mustForget: false,
   }, 'home', rng, firstStage);
 }
 
@@ -139,6 +142,7 @@ function merge(into: string[], add: string[]): string[] {
  */
 export function cast(run: RunState, input: string, rng: Rng = Math.random): CastResult {
   if (run.phase === 'record') return { run, spell: null, error: '旅は終わった。' };
+  if (run.mustForget) return { run, spell: null, error: '言葉が多すぎる。忘れる言葉を1つ選んでください。' };
   const spell = parseSpell(input.trim(), new Set(run.owned));
   if (spell.length === 0) return { run, spell: null, error: '呪文を入力してください。' };
   if (spell.length > run.charLimit) {
@@ -175,6 +179,14 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
     gainedWords = [...gainedWords, id];
     log.push(`出来事の言葉「${wordById(id).text}」を手に入れた！`);
   }
+  // 言葉が混ざり合って、新しい言葉が生まれる
+  for (const combo of COMBOS) {
+    if (!combo.ids.every((id) => spell.usedWordIds.includes(id)) || owned.includes(combo.result)) continue;
+    owned = [...owned, combo.result];
+    gainedWords = [...gainedWords, combo.result];
+    const [a, b] = combo.ids.map((id) => wordById(id).text);
+    log.push(`✦ 「${a}」と「${b}」が混ざり合って、新しい言葉「${wordById(combo.result).text}」が生まれた！`);
+  }
   if (o.reward) {
     const text = wordById(o.reward).text;
     if (owned.includes(o.reward)) {
@@ -192,6 +204,7 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
     ...run,
     hearts,
     owned,
+    mustForget: handSize(owned) > HAND_LIMIT,
     gainedWords,
     taboos,
     flags: { ...run.flags, ...o.flags },
@@ -224,6 +237,22 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   log.push('◆ 宿屋', `${regionName(run)}を抜けて、宿に泊まった。`,
     rested > hearts ? `ぐっすり眠って、ハートが${rested - hearts}つ回復した。` : 'ぐっすり眠った。', '（ここまでの旅を記録した）');
   return { spell, run: enterFork({ ...next, hearts: rested }) };
+}
+
+export function handSize(owned: string[]): number {
+  return owned.filter(countsToHand).length;
+}
+
+/** 手札があふれたとき、言葉を1つ忘れる */
+export function forget(run: RunState, id: string): RunState {
+  if (!run.owned.includes(id) || !countsToHand(id)) return run;
+  const owned = run.owned.filter((w) => w !== id);
+  return {
+    ...run,
+    owned,
+    mustForget: handSize(owned) > HAND_LIMIT,
+    log: [...run.log, `言葉「${wordById(id).text}」を忘れた。`],
+  };
 }
 
 function unownedNotes(spell: Spell): string[] {

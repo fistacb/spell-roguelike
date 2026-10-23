@@ -1,6 +1,6 @@
 // 吊り橋の狼：谷にかかる吊り橋の向こうから、狼の群れが迫ってくる
 
-import { emptyOutcome, fight, outcome, spellMultiplier, type Enemy, type SceneDef } from '../scene';
+import { absorb, emptyOutcome, fight, outcome, spellMultiplier, type Enemy, type SceneDef } from '../scene';
 
 // 群れなので、雨は全員に当たってよく効き、槍は1匹にしか当たらない
 const WOLVES: Enemy = { name: '狼の群れ', targets: ['wolf'], toughness: 8, chainable: false, shapeMult: { rain: 2, spear: 0.5 } };
@@ -59,13 +59,16 @@ export const wolves: SceneDef = {
       intent,
       bonusDamage: bonus,
       extraMult: thunderInWater ? { mult: 2, line: '谷川を渡る狼たちが感電した！' } : undefined,
-      noAttack: intent.inWater && frozen ? '狼たちは凍った谷川で次々にすべって転んだ！' : undefined,
+      noAttack: intent.inWater && frozen ? '狼たちは凍った谷川で次々にすべって転んだ！'
+        : spell.tricks.includes('ash') ? '✦ 灰で匂いが消えて、狼たちはこちらを見失った。' : undefined,
     });
     if (thunderInWater) o.discoveries.push('雷×川を渡る敵：感電して2倍');
     if (spell.shapes.includes('rain') && spell.target !== 'bridge') o.discoveries.push('雨×群れ：全員に当たってよく効く');
-    o.log.push(...r.log);
-    o.hearts += r.hearts;
-    o.discoveries.push(...r.discoveries);
+    absorb(o, r);
+    if (r.slept) {
+      o.summary = '狼の群れを眠らせて通り抜けた';
+      return outcome(o);
+    }
     o.summary = r.defeated ? '狼の群れを追い払った' : '狼の群れから逃げ切った';
     if (!r.defeated) o.log.push('なんとか狼をふりきって先へ進んだ。');
     else {

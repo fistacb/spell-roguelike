@@ -8,6 +8,7 @@ function putOut(o: Outcome, line: string, discovery: string): Outcome {
   o.reward = 'boost';
   o.hearts += 1;
   o.discoveries.push(discovery);
+  o.gainWords.push('ash');
   o.summary = '納屋の火事を消した';
   return o;
 }
@@ -44,6 +45,9 @@ export const barn: SceneDef = {
           return outcome(o);
         }
         if (spell.elements.includes('ice')) return outcome(putOut(o, '冷たい氷が炎を包みこんだ。', '氷×火事：消える'));
+        if (spell.tricks.includes('mud')) return outcome(putOut(o, '✦ 泥がどさっと火をおおった。', '泥×火事：かぶせて消せる'));
+        if (spell.tricks.includes('ash')) return outcome(putOut(o, '✦ 灰が火をすっぽりと包みこんだ。', '灰×火事：包みこんで消せる'));
+        if (spell.supports.includes('flow')) return outcome(putOut(o, '✦ 井戸の水が流れとなって、納屋に押し寄せた！', '流れ×火事：水を呼んで消せる'));
         if (spell.elements.includes('earth') && spell.shapes.some((s) => s !== 'wall')) {
           return outcome(putOut(o, '土が火の上にどさっとかぶさった。', '土×火事：かぶせて消せる'));
         }

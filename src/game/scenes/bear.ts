@@ -1,7 +1,7 @@
 // 道をふさぐ熊：細い山道の真ん中で、大きな熊が眠っている
 
 import { isAttack, isEmpty } from '../parse';
-import { emptyOutcome, fight, outcome, type Enemy, type Outcome, type SceneDef } from '../scene';
+import { absorb, emptyOutcome, fight, outcome, type Enemy, type Outcome, type SceneDef } from '../scene';
 
 const BEAR: Enemy = { name: '熊', targets: ['bear'], toughness: 12, chainable: true };
 
@@ -35,6 +35,34 @@ export const bear: SceneDef = {
       return outcome(o);
     }
     const target = spell.target ?? (isAttack(spell) ? 'bear' : 'self');
+    if (spell.supports.includes('echo')) {
+      o.log.push('呪文が山に大きく響きわたった。', '熊が飛び起きた！');
+      o.discoveries.push('響き×眠る熊：大きな音で起きてしまう');
+      const r = fight(spell, { enemy: BEAR, intent: ctx.intent! });
+      absorb(o, r);
+      o.summary = r.defeated ? '熊を追い払った' : '響きで熊を起こしてしまった';
+      return outcome(o);
+    }
+    if (target === 'hive' && spell.supports.includes('pull')) {
+      o.hearts -= 2;
+      o.log.push('蜂の巣が手もとに飛んできた。……甘い匂いにつられて、熊もついてきた！', '蜜ごと押し倒されて、ハートを2つ失った。');
+      o.discoveries.push('引き寄せ×蜂の巣：熊までついてくる');
+      o.summary = '熊に蜜ごと押し倒された';
+      return outcome(o);
+    }
+    if (spell.tricks.includes('quiet') && !(isAttack(spell) && (target === 'bear' || target === 'enemy'))) {
+      return outcome(passed(o, '静けさの中で熊の横を通った', '静けさ×眠る熊：何をしても起きない',
+        '✦ あたりがしんと静まりかえった。', '足音ひとつ立てずに、熊の横を通り抜けた。'));
+    }
+    if (spell.tricks.includes('ash') && !isAttack(spell)) {
+      return outcome(passed(o, '灰で匂いを消して熊の横を通った', '灰×眠る熊：匂いを消して通れる',
+        '✦ 灰をまとって、自分の匂いを消した。', '熊の鼻はぴくりとも動かなかった。'));
+    }
+    if ((target === 'bear' || target === 'self') && spell.supports.includes('sleep') && !isAttack(spell)) {
+      o.gainWords.push('quiet');
+      return outcome(passed(o, '熊をもっと深く眠らせて通った', '眠り×眠る熊：ますます深く眠る',
+        '✦ 熊のいびきが、さらに深くなった。', 'もう何があっても起きそうにない。'));
+    }
     if (spell.tricks.includes('smoke') && !isAttack(spell) && target !== 'hive' && target !== 'tree') {
       return outcome(passed(o, '煙にまぎれて熊の横を通った', '煙×眠る熊：煙にまぎれて通れる',
         '煙があたりに立ちこめた。', 'その中を、熊に気づかれずに通り抜けた。'));
@@ -82,9 +110,11 @@ export const bear: SceneDef = {
         if (isAttack(spell)) {
           o.log.push('熊が目を覚ました！');
           const r = fight(spell, { enemy: BEAR, intent: ctx.intent! });
-          o.log.push(...r.log);
-          o.hearts += r.hearts;
-          o.discoveries.push(...r.discoveries);
+          absorb(o, r);
+          if (r.slept) {
+            o.summary = '熊を眠らせて通り抜けた';
+            return outcome(o);
+          }
           o.summary = r.defeated ? '熊を追い払った' : '熊に襲われた';
           if (!r.defeated) o.log.push('熊はひとしきり暴れて、森の奥へ帰っていった。');
           return outcome(o);

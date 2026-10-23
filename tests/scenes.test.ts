@@ -266,3 +266,104 @@ describe('分かれ道', () => {
     expect(r.kind === 'outcome' && r.outcome.route).toBe('road');
   });
 });
+
+describe('地域の言葉と混ざる言葉', () => {
+  it('眠りは傷つけずにかけると敵が眠り、静けさが手に入る', () => {
+    const o = play('wolves', '狼に眠り', { intent: 1 });
+    expect(o.hearts).toBe(0);
+    expect(o.summary).toBe('狼の群れを眠らせて通り抜けた');
+    expect(o.gainWords).toContain('quiet');
+  });
+  it('攻撃といっしょだと眠りは効かない', () => {
+    expect(play('wolves', '狼に眠り槍', { intent: 1 }).summary).not.toBe('狼の群れを眠らせて通り抜けた');
+  });
+  it('響きは力が倍になる', () => {
+    expect(play('imp', '響き炎槍').summary).toBe('小鬼を懲らしめた');
+  });
+  it('響きは眠る熊を起こしてしまう', () => {
+    expect(play('bear', '壁に響き').hearts).toBeLessThan(0);
+  });
+  it('流れは水の中の敵を押し流す', () => {
+    expect(play('wolves', '狼に流れ', { intent: 1 }).summary).toBe('狼の群れを追い払った');
+    expect(play('slime', 'スライムに流れ').reward).toBe('blade');
+  });
+  it('引き寄せは離れた敵の飛び道具を封じるが、突っこんでくる敵には逆効果', () => {
+    expect(play('imp', '小鬼に引き寄せ', { intent: 0 }).hearts).toBe(0);
+    expect(play('imp', '小鬼に引き寄せ', { intent: 1 }).hearts).toBe(-3);
+  });
+  it('引き寄せで女の子を助けられる', () => {
+    expect(play('rockfall', '女の子に引き寄せ').summary).toBe('女の子を引き寄せて助けた');
+  });
+  it('礫は色をまとった相手にも半減されない', () => {
+    expect(play('crows', '礫', { intent: 1 }).summary).toBe('カラスの群れを追い払った');
+  });
+  it('霜で転んだ敵は倒しやすい', () => {
+    expect(play('golem', '霜炎槍', { intent: 0 }).summary).toBe('ゴーレムを崩した');
+    expect(play('golem', '炎槍', { intent: 0 }).summary).toBe('ゴーレムから逃げ出した');
+  });
+  it('泥は火事を消し、敵を弱らせる', () => {
+    expect(play('barn', '納屋に泥').summary).toBe('納屋の火事を消した');
+    expect(play('golem', '泥', { intent: 1 }).summary).toBe('ゴーレムを崩した');
+  });
+  it('火事を消すと灰が手に入る', () => {
+    expect(play('barn', '納屋に氷').gainWords).toContain('ash');
+  });
+  it('蒸気は煙のように反撃をかわす', () => {
+    expect(play('imp', '蒸気', { intent: 1 }).hearts).toBe(0);
+  });
+  it('嵐は群れをまとめて吹き飛ばす', () => {
+    expect(play('frogs', '嵐', { intent: 0 }).summary).toBe('カエルの群れを追い払った');
+  });
+  it('風はカラスを飛べなくする', () => {
+    expect(play('crows', '風').summary).toBe('向かい風でカラスを追い払った');
+  });
+});
+
+describe('新しい場面', () => {
+  it('山びこの谷：攻撃の音で雪崩、静かなら抜けて響きが手に入る', () => {
+    expect(play('valley', '炎槍').hearts).toBe(-2);
+    expect(play('valley', '壁').reward).toBe('echo');
+    expect(play('valley', '静けさ炎槍').reward).toBe('echo');
+    expect(play('valley', '雪に炎').reward).toBe('echo');
+  });
+  it('岩山のゴーレム：泉の水で崩れる', () => {
+    const o = play('golem', '泉に流れ');
+    expect(o.summary).toBe('ゴーレムを泉の水で崩した');
+    expect(o.gainWords).toContain('gravel');
+  });
+  it('増水した川：子どもを助けると流れが手に入る', () => {
+    expect(play('flood', '子どもに引き寄せ').reward).toBe('flow');
+    expect(play('flood', '濁流に氷').reward).toBe('flow');
+    expect(play('flood', '子どもに鎖').reward).toBe('flow');
+    expect(play('flood', '濁流に炎').hearts).toBe(-1);
+  });
+  it('カエルの合唱：水の中にいるうちに池に雷', () => {
+    expect(play('frogs', '池に雷', { intent: 0 }).summary).toBe('カエルの群れを追い払った');
+    expect(play('frogs', '池に氷', { intent: 0 }).hearts).toBe(0);
+  });
+  it('眠り茸の広場：妖精を助けると眠りが手に入る', () => {
+    expect(play('mushroom', '茸に風').reward).toBe('sleep');
+    expect(play('mushroom', '檻に引き寄せ').reward).toBe('sleep');
+    expect(play('mushroom', '茸に炎').hearts).toBe(-1);
+    const o = play('mushroom', '密猟者に炎槍');
+    expect(o.gainRegret).toBe(true);
+  });
+  it('迷子の子ぎつね：助けるとハート+1、母ぎつねを攻撃すると後悔', () => {
+    expect(play('fox', '子ぎつねに癒し').hearts).toBe(1);
+    expect(play('fox', '穴に土壁').hearts).toBe(1);
+    expect(play('fox', '母ぎつねに炎').gainRegret).toBe(true);
+  });
+  it('盗賊の待ち伏せ：人を傷つけると後悔、鎖や煙なら傷つけずに済む', () => {
+    expect(play('bandits', '盗賊に炎雨').gainRegret).toBe(true);
+    expect(play('bandits', '煙').gainRegret).toBe(false);
+    expect(play('bandits', '荷車に炎').hearts).toBe(0);
+    const r = SCENES.bandits.resolve(parseSpell('盗賊に炎槍', owned), { flags: {}, warned: false, intent: SCENES.bandits.intents![0], rng: () => 0.99 });
+    expect(r.kind).toBe('warning');
+  });
+  it('旅の行商人：ロバを助けると引き寄せ、何もできないとハートで買う', () => {
+    expect(play('merchant', 'ロバに癒し').reward).toBe('pull');
+    const o = play('merchant', 'あいう');
+    expect(o.hearts).toBe(-1);
+    expect(o.reward).toBe('pull');
+  });
+});
