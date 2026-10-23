@@ -1,7 +1,7 @@
 import './style.css';
-import { currentIntent, IMP_MAX_HP, PLAYER_MAX_HP } from './game/battle';
 import { countLength } from './game/parse';
-import { cast, endingMessage, newRun, type RunState } from './game/run';
+import { cast, currentScene, endingMessage, MAX_HEARTS, newRun, type RunState } from './game/run';
+import type { SceneObject } from './game/scene';
 import { addRun, emptySave, loadSave, writeSave, type SaveData } from './game/save';
 import { ELEMENT_INFO, wordById, wordColor } from './game/words';
 
@@ -39,8 +39,10 @@ function showTitle() {
         <ul>
           <li>呪文は自由に入力する。辞書にある言葉だけが力を持つ。</li>
           <li>ひらがなはつなぎの言葉として読み飛ばされるが、文字数には数える。</li>
-          <li>例：「岩に雷槍」「小川に氷」「土壁」</li>
-          <li>場面のもの（岩・女の子・枯れ木・小川）はタップで調べられる。</li>
+          <li>どの場面も詠唱は1回だけ。結果で旅の続きが変わる。</li>
+          <li>例：「岩に雷槍」「小川に氷」「土壁」「あいつに炎雨」</li>
+          <li>場面にあるものはタップで調べられる。見つけた反応も確認できる。</li>
+          <li>ハートがなくなると、旅はそこでおしまい。</li>
         </ul>
       </section>
       <section>
@@ -105,18 +107,19 @@ function doCast(text: string) {
     renderGame();
     return;
   }
-  if (!result.error) {
-    (document.getElementById('spell') as HTMLInputElement).value = '';
-    renderGame();
-    glowCards(result.spell?.usedWordIds ?? []);
-  } else {
+  if (result.error) {
     renderError();
+    return;
   }
+  (document.getElementById('spell') as HTMLInputElement).value = '';
+  selectedObject = null;
+  renderGame();
+  glowCards(result.spell?.usedWordIds ?? []);
   if (run.phase === 'record') {
     save = addRun(save, {
       date: new Date().toISOString(),
-      result: run.battle?.result === 'win' ? 'win' : 'lose',
-      spells: run.spells,
+      result: run.result === 'complete' ? 'win' : 'lose',
+      spells: run.records.map((r) => r.spell),
       gainedWords: run.gainedWords,
       discoveries: run.discoveries,
     });
@@ -140,43 +143,22 @@ function renderGame() {
   renderModal();
 }
 
+function hearts(n: number): string {
+  return '♥'.repeat(n) + '♡'.repeat(Math.max(0, MAX_HEARTS - n));
+}
+
 function renderHud() {
   const r = run!;
-  const hud = document.getElementById('hud')!;
-  const scene = r.phase === 'sceneA' ? '崖下の小道' : 'いたずら小鬼';
-  const b = r.battle;
-  const hp = r.phase !== 'sceneA' && b
-    ? `<span class="hp">あなた ${Math.max(0, b.playerHp)}/${PLAYER_MAX_HP}</span><span class="hp">小鬼 ${Math.max(0, b.impHp)}/${IMP_MAX_HP}</span>`
-    : '<span>詠唱は1回だけ</span>';
-  hud.innerHTML = `<span class="scene-name">${scene}</span>${hp}<span>上限 ${r.charLimit}文字</span>`;
+  const scene = currentScene(r);
+  document.getElementById('hud')!.innerHTML = `
+    <span class="scene-name">${esc(scene.title)}</span>
+    <span class="hearts" aria-label="ハート${r.hearts}つ">${hearts(r.hearts)}</span>
+    <span>${Math.min(r.index + 1, r.sceneIds.length)}/${r.sceneIds.length}場面</span>
+    <span>上限 ${r.charLimit}文字</span>`;
 }
-
-interface SceneObject { id: string; label: string; keyword: string; desc: string; color: string }
 
 function sceneObjects(): SceneObject[] {
-  const r = run!;
-  const b = r.battle;
-  const inBattle = r.phase !== 'sceneA';
-  const list: SceneObject[] = [
-    inBattle
-      ? { id: 'rock', label: '🪨 転がった岩', keyword: '岩', desc: '地面に転がっている。', color: '#c9b9a0' }
-      : { id: 'rock', label: '🪨 落ちてくる岩', keyword: '岩', desc: '女の子の真上に落ちてくる！', color: '#c9b9a0' },
-    { id: 'girl', label: `👧 女の子${girlLabel()}`, keyword: '女の子', desc: '近くの村の子どもらしい。', color: '#f3c6c6' },
-    b?.treeBurned
-      ? { id: 'tree', label: '🔥 燃えた枯れ木', keyword: '枯れ木', desc: 'もくもくと煙を上げている。', color: '#f0b08a' }
-      : { id: 'tree', label: '🌳 枯れ木', keyword: '枯れ木', desc: 'からからに乾いている。', color: '#cfe0b8' },
-    b?.streamFrozen || r.sceneA?.streamFrozen
-      ? { id: 'stream', label: '🧊 凍った小川', keyword: '小川', desc: 'つるつるに凍っている。', color: '#cdeaf5' }
-      : { id: 'stream', label: '🏞️ 小川', keyword: '小川', desc: '浅い小川が流れている。', color: '#bfe0f0' },
-  ];
-  if (inBattle) list.push({ id: 'imp', label: '👺 小鬼', keyword: '小鬼', desc: '岩を落とした犯人。', color: '#d9c2e8' });
-  return list;
-}
-
-function girlLabel(): string {
-  const girl = run!.battle?.girl;
-  if (!girl) return '';
-  return ({ grateful: '（加勢）', powered: '（強化）', overcharged: '（暴走）', walled: '（壁の陰）', escaped: '（避難）', dazed: '（たんこぶ）', angry: '（帰った）', hurt: '（負傷）' } as const)[girl];
+  return currentScene(run!).objects(run!.flags);
 }
 
 function renderObjects() {
@@ -208,16 +190,17 @@ function renderInfo() {
 
 function renderIntent() {
   const el = document.getElementById('intent')!;
-  const b = run!.battle;
-  if (run!.phase !== 'battle' || !b) {
+  const intent = run!.phase === 'scene' ? run!.intent : null;
+  if (!intent) {
     el.innerHTML = '';
     return;
   }
-  const intent = currentIntent(b);
   const info = ELEMENT_INFO[intent.element];
+  const scene = currentScene(run!);
+  const who = scene.kind === 'battle' ? '次の行動' : '起こすと';
   el.innerHTML = `<div class="intent" style="border-color:${info.color}">
-    次の行動：<b style="color:${info.color}">${info.label}</b> <b>${esc(intent.name)}</b>（${intent.power}）<br>
-    <small>小鬼は${esc(intent.description)}。${info.label}の色をまとっている。</small></div>`;
+    ${who}：<b style="color:${info.color}">${info.label}</b> <b>${esc(intent.name)}</b>（${'♥'.repeat(intent.hearts)}）<br>
+    <small>${esc(intent.description)}。${info.label}の色をまとっている。詠唱は1回だけ。</small></div>`;
 }
 
 function renderLog() {
@@ -225,7 +208,7 @@ function renderLog() {
   el.innerHTML = run!.log
     .map((line) => {
       if (line.startsWith('▶ ')) return `<p class="cast">${esc(line)}</p>`;
-      if (line === '──') return '<p class="sep">──</p>';
+      if (line.startsWith('◆ ')) return `<p class="scene">${esc(line.slice(2))}</p>`;
       return `<p>${esc(line)}</p>`;
     })
     .join('');
@@ -264,7 +247,7 @@ function renderCounter() {
   const n = countLength(input.value);
   counter.textContent = `${n}/${run.charLimit}`;
   counter.classList.toggle('over', n > run.charLimit);
-  const playable = run.phase === 'sceneA' || run.phase === 'battle';
+  const playable = run.phase === 'scene';
   button.disabled = !playable || n === 0 || n > run.charLimit;
   input.disabled = !playable;
 }
@@ -302,13 +285,15 @@ function showRecord(finished: RunState) {
   app.innerHTML = `
     <div class="page">
       <p class="ending">${esc(endingMessage(finished))}</p>
+      <p class="hearts big">${hearts(finished.hearts)}</p>
+      <section>
+        <h2>旅の道のり</h2>
+        <ol>${finished.records.map((r) => `<li><b>${esc(r.title)}</b>「${esc(r.spell)}」<br>${esc(r.summary)}</li>`).join('')}</ol>
+      </section>
       <section>
         <h2>今回見つけた言葉</h2>
         ${gained.length ? `<ul>${gained.map((g) => `<li>${esc(g)}</li>`).join('')}</ul>` : '<p>なし</p>'}
-      </section>
-      <section>
-        <h2>今回使った魔法</h2>
-        <ul>${finished.spells.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>
+        ${finished.taboos.length ? `<ul class="taboo">${finished.taboos.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
       </section>
       <section>
         <h2>新しい発見</h2>

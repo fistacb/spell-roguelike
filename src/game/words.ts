@@ -3,7 +3,10 @@
 export type Element = 'fire' | 'ice' | 'thunder' | 'earth' | 'wind';
 export type Shape = 'spear' | 'blade' | 'rain' | 'wall' | 'chain';
 export type Support = 'boost' | 'heal';
-export type TargetId = 'rock' | 'girl' | 'tree' | 'stream' | 'imp' | 'self';
+export type TargetId =
+  | 'rock' | 'girl' | 'tree' | 'stream' | 'imp' | 'self' | 'enemy'
+  | 'wolf' | 'bridge' | 'barn' | 'villager' | 'well'
+  | 'bear' | 'hive' | 'slime' | 'swamp' | 'grass';
 
 export type Word =
   | { id: string; text: string; kind: 'element'; element: Element }
@@ -28,10 +31,22 @@ export const WORDS: Word[] = [
   { id: 'regret', text: '後悔', kind: 'black', black: 'regret' },
   { id: 'rock', text: '岩', kind: 'target', target: 'rock' },
   { id: 'girl', text: '女の子', kind: 'target', target: 'girl', aliases: ['少女'] },
-  { id: 'tree', text: '木', kind: 'target', target: 'tree', aliases: ['枯れ木', '枯木'] },
-  { id: 'stream', text: '川', kind: 'target', target: 'stream', aliases: ['小川'] },
+  { id: 'tree', text: '木', kind: 'target', target: 'tree', aliases: ['枯れ木', '枯木', '大木'] },
+  { id: 'stream', text: '川', kind: 'target', target: 'stream', aliases: ['小川', '谷川'] },
   { id: 'imp', text: '小鬼', kind: 'target', target: 'imp', aliases: ['鬼'] },
   { id: 'self', text: '自分', kind: 'target', target: 'self', aliases: ['私', '僕'] },
+  // その場面の敵を指す
+  { id: 'enemy', text: '敵', kind: 'target', target: 'enemy', aliases: ['あいつ', 'やつ'] },
+  { id: 'wolf', text: '狼', kind: 'target', target: 'wolf', aliases: ['群れ'] },
+  { id: 'bridge', text: '橋', kind: 'target', target: 'bridge', aliases: ['吊り橋'] },
+  { id: 'barn', text: '納屋', kind: 'target', target: 'barn', aliases: ['小屋', '火'] },
+  { id: 'villager', text: '村人', kind: 'target', target: 'villager', aliases: ['おじさん'] },
+  { id: 'well', text: '井戸', kind: 'target', target: 'well' },
+  { id: 'bear', text: '熊', kind: 'target', target: 'bear', aliases: ['クマ', 'くま'] },
+  { id: 'hive', text: '蜂の巣', kind: 'target', target: 'hive', aliases: ['巣', '蜜'] },
+  { id: 'slime', text: 'スライム', kind: 'target', target: 'slime' },
+  { id: 'swamp', text: '沼', kind: 'target', target: 'swamp' },
+  { id: 'grass', text: '草', kind: 'target', target: 'grass', aliases: ['枯れ草'] },
 ];
 
 // 旅の始めに持っているワード。対象語は場面が提供するので所持に含めない
