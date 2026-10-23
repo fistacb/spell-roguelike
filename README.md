@@ -18,7 +18,8 @@
 npm install
 npm run dev    # 開発サーバー（スマホからも開けるよう --host 付き）
 npm test       # ルールの自動テスト
-npm run build  # dist/index.html に1ファイルで出力（アーティファクト用）
+npm run build  # dist/index.html に1ファイルで出力
+npm run build:artifact  # 試遊用アーティファクトの本文 dist/artifact.html も出力
 ```
 
 ## 構成

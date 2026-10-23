@@ -51,8 +51,14 @@ function showTitle() {
       <button id="reset">記録を消す</button>
     </div>`;
   document.getElementById('start')!.onclick = startRun;
-  document.getElementById('reset')!.onclick = () => {
-    if (!confirm('これまでの旅の記録を消しますか？')) return;
+  // confirm() が使えない環境があるので、2回押しで確定する
+  const reset = document.getElementById('reset') as HTMLButtonElement;
+  reset.onclick = () => {
+    if (reset.dataset.armed !== 'yes') {
+      reset.dataset.armed = 'yes';
+      reset.textContent = 'もう一度押すと記録を消します';
+      return;
+    }
     save = emptySave();
     writeSave(save);
     showTitle();
@@ -176,7 +182,7 @@ function girlLabel(): string {
 function renderObjects() {
   const el = document.getElementById('objects')!;
   el.innerHTML = sceneObjects()
-    .map((o) => `<button class="object" data-id="${o.id}" style="background:${o.color};color:#2b2620;border-color:${o.color}">${esc(o.label)}</button>`)
+    .map((o) => `<button class="object" data-id="${o.id}" style="background:${o.color};color:var(--object-ink);border-color:${o.color}">${esc(o.label)}</button>`)
     .join('');
   el.querySelectorAll<HTMLButtonElement>('.object').forEach((btn) => {
     btn.onclick = () => {
