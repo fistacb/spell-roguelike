@@ -492,3 +492,83 @@ describe('増えた場面', () => {
     expect(play('sluice', '農夫に槍').gainRegret).toBe(true);
   });
 });
+
+describe('さらに増えた場面', () => {
+  it('暴れミツバチ：わらを燃やすか雨で煙が手に入り、巣箱を燃やすと後悔', () => {
+    expect(play('bees', 'わらに炎').reward).toBe('smoke');
+    expect(play('bees', '雨').reward).toBe('smoke');
+    expect(play('bees', '壁').reward).toBe('smoke');
+    expect(play('bees', '巣箱に炎').gainRegret).toBe(true);
+    expect(play('bees', '槍').gainRegret).toBe(true);
+  });
+  it('鍛冶屋の手伝い：鋼を冷やすか水桶をとかすと刃が手に入り、炎は鋼を曲げる', () => {
+    expect(play('smithy', '氷').reward).toBe('blade');
+    expect(play('smithy', '水桶に炎').reward).toBe('blade');
+    expect(play('smithy', '炎').reward).toBeNull();
+  });
+  it('凍った滝：ひびを槍で突くと霜が手に入り、炎だけではとけきらない', () => {
+    expect(play('icefall', '槍').reward).toBe('frost');
+    expect(play('icefall', 'ひびに雷').reward).toBe('frost');
+    expect(play('icefall', '炎').hearts).toBe(-1);
+  });
+  it('峠の雪男：焚き火で追い払い、洞穴を攻撃すると怒らせる', () => {
+    expect(play('yeti', '焚き火に炎').hearts).toBe(1);
+    expect(play('yeti', '洞穴に槍').hearts).toBe(-1);
+    expect(play('yeti', '霜', { intent: 1 }).hearts).toBe(0);
+  });
+  it('崩れた坑道：瓦礫を槍で貫くと礫が手に入り、雷は天井を崩す', () => {
+    expect(play('mine', '槍').reward).toBe('gravel');
+    expect(play('mine', '壁').reward).toBe('gravel');
+    expect(play('mine', '瓦礫に雷槍').hearts).toBe(-2);
+  });
+  it('網にかかったカワウソ：網を刃で切ると流れが手に入り、燃やすと後悔', () => {
+    expect(play('otter', '刃').reward).toBe('flow');
+    expect(play('otter', 'カワウソに癒し').reward).toBe('flow');
+    expect(play('otter', '網に炎').gainRegret).toBe(true);
+  });
+  it('河童の相撲：岸に上がった河童の皿を乾かすと勝ち、川の中では効かない', () => {
+    expect(play('kappa', '皿に炎', { intent: 0 }).summary).toBe('河童の皿を乾かして勝った');
+    expect(play('kappa', '皿に炎', { intent: 1 }).summary).not.toBe('河童の皿を乾かして勝った');
+    expect(play('kappa', 'きゅうりに引き寄せ').hearts).toBe(0);
+  });
+  it('日照りの溜め池：雨や雲で雨が手に入り、炎は干上がらせる', () => {
+    expect(play('reservoir', '雨').reward).toBe('rain');
+    expect(play('reservoir', '雲に雷').reward).toBe('rain');
+    expect(play('reservoir', '炎').hearts).toBe(-1);
+  });
+  it('狩人の罠：縄を切ると静けさが手に入り、炎は子鹿までやけどさせる', () => {
+    expect(play('snare', '刃').reward).toBe('quiet');
+    expect(play('snare', '槍').reward).toBe('quiet');
+    expect(play('snare', '罠に炎').gainRegret).toBe(true);
+  });
+  it('茨の門：刃で切りはらうと槍が手に入り、燃やすと小鳥の巣まで焼ける', () => {
+    expect(play('thorns', '刃').reward).toBe('spear');
+    expect(play('thorns', '壁').reward).toBe('spear');
+    const o = play('thorns', '炎');
+    expect(o.gainRegret).toBe(true);
+    expect(o.reward).toBeNull();
+  });
+  it('日だまりの大蛇：静けさで気づかれずに通り、冷やすと襲ってこられない', () => {
+    expect(play('serpent', '静けさ').summary).toBe('大蛇に気づかれずに通り抜けた');
+    expect(play('serpent', '霜').hearts).toBe(0);
+    expect(play('serpent', '槍').hearts).toBeLessThan(0);
+  });
+  it('的当て屋台：槍で大当たりすると鎖が手に入り、景品を引き寄せると後悔', () => {
+    expect(play('targetstall', '槍').reward).toBe('chain');
+    expect(play('targetstall', '炎').hearts).toBe(-1);
+    expect(play('targetstall', '景品に引き寄せ').gainRegret).toBe(true);
+  });
+  it('茶屋の火鉢：雷や強い炎で癒しが手に入り、ただの炎は煙が出るだけ', () => {
+    expect(play('teahouse', '雷').reward).toBe('heal');
+    expect(play('teahouse', '火の粉').reward).toBe('heal');
+    const o = play('teahouse', '炎');
+    expect(o.reward).toBeNull();
+    expect(o.gainWords).toContain('smoke');
+  });
+  it('市場のスリ：霜で転ばせると引き寄せが手に入り、人ごみに雨を降らせると後悔', () => {
+    expect(play('pickpocket', '霜').reward).toBe('pull');
+    expect(play('pickpocket', '壁').reward).toBe('pull');
+    expect(play('pickpocket', '雨').gainRegret).toBe(true);
+    expect(play('pickpocket', '槍').gainRegret).toBe(true);
+  });
+});

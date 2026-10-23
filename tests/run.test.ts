@@ -93,7 +93,7 @@ describe('旅の進行', () => {
     expect(run.phase).toBe('scene');
     expect(run.stage).toBe(1);
     expect(run.region).toBe('mountain');
-    expect(run.sceneIds).toEqual(expect.arrayContaining(['bear', 'wolves']));
+    expect(run.sceneIds.every((id) => REGIONS.mountain.scenes.includes(id))).toBe(true);
     expect(run.charLimit).toBe(START_CHAR_LIMIT + 2);
   });
 
