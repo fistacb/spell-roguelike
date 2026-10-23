@@ -35,9 +35,10 @@ export const bandits: SceneDef = {
       o.summary = '荷車を盾にして逃げ切った';
       return outcome(o);
     }
-    if ((spell.tricks.includes('ash') || spell.tricks.includes('smoke')) && !isAttack(spell)) {
-      o.log.push(spell.tricks.includes('ash') ? '✦ 灰を巻き上げて、足跡を消した。' : '✦ 煙があたりに立ちこめた。', '盗賊たちは見当違いの方向を探している。そのすきに逃げ切った。');
-      o.discoveries.push('煙・灰×盗賊：見失わせて逃げ切る');
+    if ((spell.tricks.includes('ash') || spell.tricks.includes('smoke') || spell.tricks.includes('quiet')) && !isAttack(spell)) {
+      o.log.push(spell.tricks.includes('ash') ? '✦ 灰を巻き上げて、足跡を消した。'
+        : spell.tricks.includes('smoke') ? '✦ 煙があたりに立ちこめた。' : '✦ 足音がすっと消えた。', '盗賊たちは見当違いの方向を探している。そのすきに逃げ切った。');
+      o.discoveries.push('煙・灰・静けさ×盗賊：見失わせて逃げ切る');
       o.summary = '盗賊たちをまいて逃げ切った';
       return outcome(o);
     }

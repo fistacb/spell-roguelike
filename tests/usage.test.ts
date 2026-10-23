@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildUsageReport, sceneAppearance } from '../src/game/usage';
+import { buildUsageReport, LIMITS, sceneAppearance } from '../src/game/usage';
 import { SCENES } from '../src/game/scenes';
 import { WORDS } from '../src/game/words';
 
@@ -17,7 +17,9 @@ describe('言葉の使い道表', () => {
     expect(word('quiet').goodScenes).toContain('bear');
   });
   it('目安から外れた言葉には警告がつく', () => {
-    expect(word('quiet').warnings.length).toBeGreaterThan(0);
+    for (const w of report.words) {
+      if (w.goodScenes.length < LIMITS.minScenes || w.versatility > LIMITS.maxVersatility) expect(w.warnings.length).toBeGreaterThan(0);
+    }
   });
   it('故郷の場面は毎回の旅で必ず出会う', () => {
     const a = sceneAppearance(200);
