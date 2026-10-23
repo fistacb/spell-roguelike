@@ -13,7 +13,11 @@ export type TargetId =
   | 'crow' | 'scarecrow' | 'field' | 'river' | 'boat' | 'boatman' | 'fog' | 'lantern' | 'owl' | 'boulder'
   | 'snow' | 'golem' | 'spring' | 'child' | 'oldbridge' | 'torrent' | 'frog' | 'pond' | 'lily'
   | 'mushroom' | 'cage' | 'poacher' | 'fairy' | 'kit' | 'pit' | 'vixen' | 'bandit' | 'cart'
-  | 'merchant' | 'donkey' | 'pack';
+  | 'merchant' | 'donkey' | 'pack'
+  | 'mill' | 'channel' | 'miller' | 'goat' | 'rope' | 'imps' | 'henhouse' | 'torch'
+  | 'mire' | 'carriage' | 'horse' | 'guard' | 'gate' | 'tower' | 'roof' | 'bell' | 'stage' | 'juggler' | 'crowd'
+  | 'warden' | 'shrine' | 'offering' | 'web' | 'spider' | 'trees' | 'wisp' | 'signpost'
+  | 'hearth' | 'door' | 'blizzard' | 'traveler' | 'root' | 'cliff' | 'catfish' | 'riverbed' | 'sluice' | 'paddy' | 'farmer';
 
 // hint：カードをタップしたときの、効果をはっきり言わない一言
 // flash：混ざった言葉などが効いたときの演出
@@ -129,6 +133,44 @@ export const WORDS: Word[] = [
   { id: 'merchant', text: '行商人', kind: 'target', target: 'merchant', aliases: ['商人'] },
   { id: 'donkey', text: 'ロバ', kind: 'target', target: 'donkey', aliases: ['驢馬'] },
   { id: 'pack', text: '荷物', kind: 'target', target: 'pack', aliases: ['荷'] },
+  { id: 'mill', text: '水車', kind: 'target', target: 'mill', aliases: ['羽根'] },
+  { id: 'channel', text: '水路', kind: 'target', target: 'channel' },
+  { id: 'miller', text: '粉屋', kind: 'target', target: 'miller' },
+  { id: 'goat', text: '子ヤギ', kind: 'target', target: 'goat', aliases: ['ヤギ', '山羊'] },
+  { id: 'rope', text: '縄', kind: 'target', target: 'rope', aliases: ['ロープ'] },
+  { id: 'imps', text: '小鬼たち', kind: 'target', target: 'imps', aliases: ['仲間'] },
+  { id: 'henhouse', text: '鶏小屋', kind: 'target', target: 'henhouse', aliases: ['鶏', 'ニワトリ'] },
+  { id: 'torch', text: '松明', kind: 'target', target: 'torch', aliases: ['たいまつ'] },
+  { id: 'mire', text: 'ぬかるみ', kind: 'target', target: 'mire', aliases: ['泥道'] },
+  { id: 'carriage', text: '馬車', kind: 'target', target: 'carriage', aliases: ['車輪'] },
+  { id: 'horse', text: '馬', kind: 'target', target: 'horse' },
+  { id: 'guard', text: '番兵', kind: 'target', target: 'guard', aliases: ['兵士'] },
+  { id: 'gate', text: '門', kind: 'target', target: 'gate', aliases: ['関所'] },
+  { id: 'tower', text: '塔', kind: 'target', target: 'tower' },
+  { id: 'roof', text: '屋根', kind: 'target', target: 'roof' },
+  { id: 'bell', text: '鐘', kind: 'target', target: 'bell' },
+  { id: 'stage', text: '舞台', kind: 'target', target: 'stage', aliases: ['空'] },
+  { id: 'juggler', text: '芸人', kind: 'target', target: 'juggler', aliases: ['座長'] },
+  { id: 'crowd', text: '見物人', kind: 'target', target: 'crowd', aliases: ['観客'] },
+  { id: 'warden', text: '番人', kind: 'target', target: 'warden', aliases: ['石像'] },
+  { id: 'shrine', text: '祠', kind: 'target', target: 'shrine', aliases: ['灯明'] },
+  { id: 'offering', text: '供え物', kind: 'target', target: 'offering', aliases: ['供え物台'] },
+  { id: 'web', text: '蜘蛛の巣', kind: 'target', target: 'web', aliases: ['糸'] },
+  { id: 'spider', text: '蜘蛛', kind: 'target', target: 'spider', aliases: ['大蜘蛛'] },
+  { id: 'trees', text: '木々', kind: 'target', target: 'trees', aliases: ['枝'] },
+  { id: 'wisp', text: '鬼火', kind: 'target', target: 'wisp' },
+  { id: 'signpost', text: '道しるべ', kind: 'target', target: 'signpost', aliases: ['看板'] },
+  { id: 'hearth', text: '暖炉', kind: 'target', target: 'hearth', aliases: ['薪'] },
+  { id: 'door', text: '戸口', kind: 'target', target: 'door', aliases: ['戸', '入り口'] },
+  { id: 'blizzard', text: '吹雪', kind: 'target', target: 'blizzard' },
+  { id: 'traveler', text: '旅人', kind: 'target', target: 'traveler' },
+  { id: 'root', text: '木の根', kind: 'target', target: 'root', aliases: ['根'] },
+  { id: 'cliff', text: '崖', kind: 'target', target: 'cliff', aliases: ['岩壁'] },
+  { id: 'catfish', text: 'ナマズ', kind: 'target', target: 'catfish', aliases: ['大ナマズ', '鯰', '主'] },
+  { id: 'riverbed', text: '岸', kind: 'target', target: 'riverbed', aliases: ['岸辺'] },
+  { id: 'sluice', text: '水門', kind: 'target', target: 'sluice' },
+  { id: 'paddy', text: '田んぼ', kind: 'target', target: 'paddy', aliases: ['稲', '田'] },
+  { id: 'farmer', text: '農夫', kind: 'target', target: 'farmer' },
 ];
 
 // 空振りの一言：唱えた言葉が場面で何も起こさなかったとき、使いどころをほのめかす

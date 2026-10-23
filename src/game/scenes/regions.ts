@@ -9,11 +9,11 @@ export interface Region {
 }
 
 export const REGIONS: Record<RegionId, Region> = {
-  home: { name: '故郷の村はずれ', scenes: ['barn', 'crows'] },
-  mountain: { name: '山道', scenes: ['bear', 'wolves', 'valley', 'golem'] },
-  river: { name: '川沿いの道', scenes: ['ferry', 'slime', 'flood', 'frogs'] },
-  forest: { name: '霧の森', scenes: ['fog', 'mushroom', 'fox'] },
-  road: { name: '街道', scenes: ['bandits', 'merchant'] },
+  home: { name: '故郷の村はずれ', scenes: ['barn', 'crows', 'watermill', 'goatwell', 'nightwatch'] },
+  mountain: { name: '山道', scenes: ['bear', 'wolves', 'valley', 'golem', 'blizzard', 'cliff'] },
+  river: { name: '川沿いの道', scenes: ['ferry', 'slime', 'flood', 'frogs', 'catfish', 'sluice'] },
+  forest: { name: '霧の森', scenes: ['fog', 'mushroom', 'fox', 'shrine', 'spiderweb', 'wisp'] },
+  road: { name: '街道', scenes: ['bandits', 'merchant', 'mudcart', 'checkpoint', 'temple', 'performers'] },
 };
 
 // 分かれ道に並ぶ、言葉で切り開く地域

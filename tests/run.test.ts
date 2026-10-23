@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cast, currentScene, forget, handSize, INN_HEARTS, MAX_HEARTS, newRun, START_CHAR_LIMIT, START_HEARTS, type RunState } from '../src/game/run';
 import { buildStage, SCENES, STAGE_COUNT, STAGE_LENGTH } from '../src/game/scenes';
+import { REGIONS } from '../src/game/scenes/regions';
 import { FIZZLE, HAND_LIMIT, STARTING_WORDS } from '../src/game/words';
 
 const first = () => 0; // 予告は候補の1つめ
@@ -29,8 +30,7 @@ describe('ステージの組み立て', () => {
   });
   it('地域の場面を優先し、すでに起きた場面は選ばない', () => {
     const ids = buildStage('mountain', ['barn'], first);
-    expect(ids).toContain('bear');
-    expect(ids).toContain('wolves');
+    expect(ids.every((id) => REGIONS.mountain.scenes.includes(id))).toBe(true);
     expect(ids).not.toContain('barn');
     expect(ids).not.toContain('rockfall');
   });
