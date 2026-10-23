@@ -5,6 +5,8 @@ import { emptyOutcome, outcome, REGRET_LINE, type Outcome, type SceneDef } from 
 import type { TargetId } from '../words';
 
 const ROCK_HITS = '岩は女の子に当たってしまった……。';
+const HEAL_LINE = '「おばあちゃんに習ったの」と、癒しの言葉を教えてくれた。';
+const ROCK_PIECES = '砕けた岩のかけらが、ぱらぱらと降ってきた。';
 const BREAD = '女の子がお礼にパンをくれた。ハートが1つ増えた。';
 
 function hurt(o: Outcome, ...lines: string[]): Outcome {
@@ -21,13 +23,16 @@ function walled(o: Outcome): Outcome {
   o.log.push('壁が立ち上がり、岩を受け止めた！', '女の子は壁の陰でほっとしている。');
   o.discoveries.push('壁×落石：防ぐ');
   o.summary = '壁で女の子を守った';
+  o.log.push(HEAL_LINE);
+  o.reward = 'heal';
   return o;
 }
 
 function saved(o: Outcome, summary: string, ...lines: string[]): Outcome {
-  o.log.push(...lines, BREAD);
+  o.log.push(...lines, BREAD, HEAL_LINE);
   o.hearts += 1;
   o.summary = summary;
+  o.reward = 'heal';
   return o;
 }
 
@@ -58,12 +63,16 @@ export const rockfall: SceneDef = {
         if (spell.supports.includes('boost')) {
           if (spell.elements.length > 0) {
             o.flags.girl = 'overcharged';
+            o.gainWords.push('gravel');
+            o.log.push(ROCK_PIECES);
             o.log.push('女の子に力があふれ、拳ひとつで岩を粉々にした！', '……でも、目がぐるぐる回っている。');
             o.discoveries.push('強化＋属性×女の子：力があふれて暴走する');
             o.summary = '女の子を強化しすぎた';
             return outcome(o);
           }
           o.flags.girl = 'powered';
+          o.gainWords.push('gravel');
+          o.log.push(ROCK_PIECES);
           o.discoveries.push('強化×女の子：岩を砕けるほど強くなる');
           return outcome(saved(o, '女の子を強化して岩を砕かせた', '女の子は強くなり、自分で岩を砕いた！'));
         }
@@ -109,6 +118,8 @@ export const rockfall: SceneDef = {
         if (isAttack(spell)) {
           o.flags.girl = 'grateful';
           o.discoveries.push('攻撃×岩：砕ける');
+          o.gainWords.push('gravel');
+          o.log.push(ROCK_PIECES);
           return outcome(saved(o, '岩を砕いて女の子を助けた', '呪文が岩を砕いた！', '「ありがとう！ わたしも手伝う！」'));
         }
         return outcome(hurt(o, '岩に呪文は届いたが、何も起きなかった。'));
@@ -116,6 +127,7 @@ export const rockfall: SceneDef = {
       case 'tree': {
         if (spell.elements.includes('fire')) {
           o.flags.treeBurned = true;
+          o.gainWords.push('smoke');
           o.discoveries.push('炎×枯れ木：燃えて煙が出る');
           return outcome(hurt(o, '枯れ木が燃え上がり、煙が崖の上へ流れていく。', '崖の上で小鬼がむせている！'));
         }
@@ -125,9 +137,12 @@ export const rockfall: SceneDef = {
         if (spell.elements.includes('ice')) {
           o.flags.streamFrozen = true;
           o.flags.girl = 'escaped';
+          o.gainWords.push('frost');
           o.log.push('小川が一瞬で凍りついた。', '女の子は足をすべらせ、つるーっと岩の下から滑り出た！', '岩は誰もいない地面に落ちた。');
           o.discoveries.push('氷×小川：凍って滑る地面になる');
           o.summary = '小川を凍らせて女の子を滑らせた';
+          o.log.push(HEAL_LINE);
+          o.reward = 'heal';
           return outcome(o);
         }
         if (spell.elements.includes('thunder')) {

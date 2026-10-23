@@ -3,7 +3,7 @@
 import { parseSpell, type Spell } from './parse';
 import { pick, type Flags, type Intent, type Rng } from './scene';
 import { buildJourney, SCENES } from './scenes';
-import { STARTING_WORDS } from './words';
+import { STARTING_WORDS, wordById } from './words';
 
 export const START_CHAR_LIMIT = 6;
 export const MAX_CHAR_LIMIT = 10;
@@ -114,7 +114,27 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
     }
   }
 
-  const hearts = Math.max(0, Math.min(MAX_HEARTS, run.hearts + o.hearts));
+  // 出来事の言葉と、お礼の言葉
+  let heartGain = o.hearts;
+  for (const id of o.gainWords) {
+    if (owned.includes(id)) continue;
+    owned = [...owned, id];
+    gainedWords = [...gainedWords, id];
+    log.push(`出来事の言葉「${wordById(id).text}」を手に入れた！`);
+  }
+  if (o.reward) {
+    const text = wordById(o.reward).text;
+    if (owned.includes(o.reward)) {
+      heartGain += 1;
+      log.push(`「${text}」はもう知っている。かわりにハートが1つ増えた。`);
+    } else {
+      owned = [...owned, o.reward];
+      gainedWords = [...gainedWords, o.reward];
+      log.push(`言葉「${text}」を手に入れた！`);
+    }
+  }
+
+  const hearts = Math.max(0, Math.min(MAX_HEARTS, run.hearts + heartGain));
   const charLimit = Math.min(MAX_CHAR_LIMIT, run.charLimit + 1);
   const next: RunState = {
     ...run,

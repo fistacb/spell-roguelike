@@ -10,8 +10,8 @@ export const wolves: SceneDef = {
   title: '吊り橋の狼',
   kind: 'battle',
   intents: [
-    { name: '氷の牙', element: 'ice', hearts: 1, inWater: false, description: '吊り橋を渡って噛みつこうとしている' },
-    { name: '群れの突撃', element: 'earth', hearts: 2, inWater: true, description: '谷川を渡って一斉に突っ込もうとしている' },
+    { name: '氷の牙', element: 'ice', hearts: 1, inWater: false, charge: true, description: '吊り橋を渡って噛みつこうとしている' },
+    { name: '群れの突撃', element: 'earth', hearts: 2, inWater: true, charge: true, description: '谷川を渡って一斉に突っ込もうとしている' },
   ],
   intro: () => ['谷にかかる吊り橋を渡りきったところで、遠吠えが聞こえた。', '向こう岸から狼の群れが迫ってくる！'],
   objects: () => [
@@ -36,6 +36,7 @@ export const wolves: SceneDef = {
     let frozen = false;
     if ((spell.target === 'stream' || spell.shapes.includes('rain')) && spell.elements.includes('ice')) {
       frozen = true;
+      o.gainWords.push('frost');
       o.log.push('谷川が凍りついた。');
       o.discoveries.push('氷×谷川：凍って滑る地面になる');
     }
@@ -67,6 +68,10 @@ export const wolves: SceneDef = {
     o.discoveries.push(...r.discoveries);
     o.summary = r.defeated ? '狼の群れを追い払った' : '狼の群れから逃げ切った';
     if (!r.defeated) o.log.push('なんとか狼をふりきって先へ進んだ。');
+    else {
+      o.log.push('谷川に残ったしぶきを見て、雨の呪文を思いついた。');
+      o.reward = 'rain';
+    }
     return outcome(o);
   },
 };

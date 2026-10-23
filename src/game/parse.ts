@@ -1,6 +1,6 @@
 // 自由入力の呪文を辞書と照合する
 
-import { WORDS, type Element, type Shape, type Support, type TargetId, type Word } from './words';
+import { WORDS, type Element, type Shape, type Support, type TargetId, type Trick, type Word } from './words';
 
 export type Token =
   | { type: 'word'; text: string; wordId: string }
@@ -15,6 +15,7 @@ export interface Spell {
   elements: Element[];
   shapes: Shape[];
   supports: Support[];
+  tricks: Trick[];
   target: TargetId | null;
   regret: boolean;
   // 発動に使われたワード（カード発光の順番）
@@ -93,6 +94,7 @@ export function parseSpell(input: string, owned: ReadonlySet<string>): Spell {
     elements: [],
     shapes: [],
     supports: [],
+    tricks: [],
     target: null,
     regret: false,
     usedWordIds: [],
@@ -108,6 +110,13 @@ export function parseSpell(input: string, owned: ReadonlySet<string>): Spell {
         break;
       case 'shape':
         spell.shapes.push(word.shape);
+        break;
+      case 'compound':
+        if (!spell.elements.includes(word.element)) spell.elements.push(word.element);
+        spell.shapes.push(word.shape);
+        break;
+      case 'trick':
+        if (!spell.tricks.includes(word.trick)) spell.tricks.push(word.trick);
         break;
       case 'support':
         if (!spell.supports.includes(word.support)) spell.supports.push(word.support);

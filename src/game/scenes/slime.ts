@@ -3,6 +3,8 @@
 import { emptyOutcome, fight, outcome, spellMultiplier, type Enemy, type SceneDef } from '../scene';
 
 // ぷにぷにしているので、槍や刃では手ごたえがない
+const BLADE_LINE = '沼の底で、錆びない刃が光っていた。';
+
 const SLIME: Enemy = { name: 'スライム', targets: ['slime'], toughness: 8, chainable: false, shapeMult: { spear: 0.5, blade: 0.5 } };
 
 export const slime: SceneDef = {
@@ -11,7 +13,7 @@ export const slime: SceneDef = {
   kind: 'battle',
   intents: [
     { name: '泥はね', element: 'earth', hearts: 1, inWater: false, description: '体をふるわせて泥を飛ばそうとしている' },
-    { name: '冷たいのしかかり', element: 'ice', hearts: 2, inWater: false, description: 'ふくらんでのしかかろうとしている' },
+    { name: '冷たいのしかかり', element: 'ice', hearts: 2, inWater: false, charge: true, description: 'ふくらんでのしかかろうとしている' },
   ],
   intro: () => ['ぬかるんだ沼地に出た。', '沼の真ん中で、大きなスライムがぷるぷるしている！'],
   objects: () => [
@@ -27,6 +29,9 @@ export const slime: SceneDef = {
       o.log.push('沼がスライムごと凍りついた！', 'スライムはかちこちになって動けない。');
       o.discoveries.push('氷×沼：スライムごと凍らせて動けなくする');
       o.summary = 'スライムを沼ごと凍らせた';
+      o.gainWords.push('frost');
+      o.log.push(BLADE_LINE);
+      o.reward = 'blade';
       return outcome(o);
     }
 
@@ -39,6 +44,7 @@ export const slime: SceneDef = {
     }
     if ((spell.target === 'grass' || spell.shapes.includes('rain')) && spell.elements.includes('fire')) {
       toughnessDown += 4;
+      o.gainWords.push('smoke');
       o.log.push('枯れ草が燃え上がり、熱で沼の水がぐつぐつ干上がっていく。', 'スライムがしぼんでいく！');
       o.discoveries.push('炎×枯れ草：沼が干上がってスライムがしぼむ');
     }
@@ -63,6 +69,10 @@ export const slime: SceneDef = {
     o.discoveries.push(...r.discoveries);
     o.summary = r.defeated ? 'スライムを追い払った' : 'スライムに泥だらけにされた';
     if (!r.defeated) o.log.push('スライムが沼に沈んだすきに、なんとか向こう岸へ渡った。');
+    else {
+      o.log.push(BLADE_LINE);
+      o.reward = 'blade';
+    }
     return outcome(o);
   },
 };

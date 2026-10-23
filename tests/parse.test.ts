@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { countLength, parseSpell } from '../src/game/parse';
 import { STARTING_WORDS } from '../src/game/words';
 
-const owned = new Set(STARTING_WORDS);
+// 初期ワードに加えて、旅で手に入れた強化・雨を持っている
+const owned = new Set([...STARTING_WORDS, 'boost', 'rain']);
 
 describe('parseSpell', () => {
   it('漢字の複合語を最長一致で区切る', () => {

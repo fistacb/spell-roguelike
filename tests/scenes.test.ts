@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { parseSpell } from '../src/game/parse';
 import type { Flags, Outcome } from '../src/game/scene';
 import { SCENES } from '../src/game/scenes';
-import { STARTING_WORDS } from '../src/game/words';
+import { WORDS } from '../src/game/words';
 
-const owned = new Set([...STARTING_WORDS, 'regret']);
+// 場面のしかけを確かめるため、すべての言葉を持っていることにする
+const owned = new Set(WORDS.filter((w) => w.kind !== 'target').map((w) => w.id));
 
 function play(sceneId: string, input: string, opts: { flags?: Flags; intent?: number; warned?: boolean; rng?: () => number } = {}): Outcome {
   const scene = SCENES[sceneId];
@@ -150,5 +151,43 @@ describe('沼のスライム', () => {
   it('枯れ草を燃やすとしぼむ', () => {
     expect(play('slime', '草に炎').summary).toBe('スライムに泥だらけにされた');
     expect(play('slime', '炎雨').summary).toBe('スライムを追い払った');
+  });
+});
+
+describe('出来事ワードとお礼の言葉', () => {
+  it('木を燃やすと煙、川を凍らせると霜、岩を砕くと礫', () => {
+    expect(play('rockfall', '枯れ木に炎').gainWords).toContain('smoke');
+    expect(play('rockfall', '小川に氷').gainWords).toContain('frost');
+    expect(play('rockfall', '岩に槍').gainWords).toContain('gravel');
+  });
+  it('うまく切り抜けるとお礼の言葉がもらえる', () => {
+    expect(play('rockfall', '岩に槍').reward).toBe('heal');
+    expect(play('rockfall', '壁').reward).toBe('heal');
+    expect(play('imp', '炎槍', { flags: { girl: 'grateful' } }).reward).toBe('chain');
+    expect(play('barn', '納屋に氷').reward).toBe('boost');
+    expect(play('wolves', '炎雨').reward).toBe('rain');
+    expect(play('bear', '熊に癒し').reward).toBe('earth');
+    expect(play('slime', '沼に氷').reward).toBe('blade');
+  });
+  it('失敗するとお礼の言葉はもらえない', () => {
+    expect(play('rockfall', '枯れ木に炎').reward).toBeNull();
+    expect(play('wolves', '炎槍').reward).toBeNull();
+  });
+  it('煙は反撃をかわす', () => {
+    expect(play('imp', '煙', { intent: 1 }).hearts).toBe(0);
+    expect(play('imp', '炎', { intent: 1 }).hearts).toBe(-2);
+  });
+  it('霜は地面を走ってくる攻撃だけ止める', () => {
+    expect(play('slime', '霜', { intent: 1 }).hearts).toBe(0); // のしかかり
+    expect(play('slime', '霜', { intent: 0 }).hearts).toBe(-1); // 泥はね
+  });
+  it('礫は土の雨として群れによく効く', () => {
+    const spell = parseSpell('礫', owned);
+    expect(spell.elements).toEqual(['earth']);
+    expect(spell.shapes).toEqual(['rain']);
+    expect(play('wolves', '礫', { intent: 0 }).summary).toBe('狼の群れを追い払った');
+  });
+  it('煙にまぎれて眠る熊の横を通れる', () => {
+    expect(play('bear', '煙').hearts).toBe(0);
   });
 });
