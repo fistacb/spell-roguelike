@@ -1,6 +1,6 @@
 // 沼のスライム：ぬかるんだ沼地で、大きなスライムが道をふさいでいる
 
-import { emptyOutcome, fight, outcome, spellMultiplier, type Enemy, type SceneDef } from '../scene';
+import { absorb, emptyOutcome, fight, outcome, spellMultiplier, type Enemy, type SceneDef } from '../scene';
 
 // ぷにぷにしているので、槍や刃では手ごたえがない
 const BLADE_LINE = '沼の底で、錆びない刃が光っていた。';
@@ -35,6 +35,15 @@ export const slime: SceneDef = {
       return outcome(o);
     }
 
+    if (spell.supports.includes('flow') && (spell.target === 'slime' || spell.target === 'swamp' || spell.target === 'enemy' || spell.target === null)) {
+      o.log.push('✦ 沼の水が流れを作り、スライムごと下流へ運んでいった！');
+      o.discoveries.push('流れ×沼：スライムごと押し流す');
+      o.summary = 'スライムを沼の水ごと押し流した';
+      o.log.push(BLADE_LINE);
+      o.reward = 'blade';
+      return outcome(o);
+    }
+
     let bonus = 0;
     let toughnessDown = 0;
     if (spell.target === 'swamp' && spell.elements.includes('thunder')) {
@@ -64,9 +73,11 @@ export const slime: SceneDef = {
       extraMult: thunderOnSlime ? { mult: 2, line: '水を吸ったスライムに雷がよく通った！' } : undefined,
     });
     if (thunderOnSlime) o.discoveries.push('雷×スライム：水を吸っていて2倍効く');
-    o.log.push(...r.log);
-    o.hearts += r.hearts;
-    o.discoveries.push(...r.discoveries);
+    absorb(o, r);
+    if (r.slept) {
+      o.summary = 'スライムを眠らせて通り抜けた';
+      return outcome(o);
+    }
     o.summary = r.defeated ? 'スライムを追い払った' : 'スライムに泥だらけにされた';
     if (!r.defeated) o.log.push('スライムが沼に沈んだすきに、なんとか向こう岸へ渡った。');
     else {

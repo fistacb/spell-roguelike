@@ -60,6 +60,11 @@ export const rockfall: SceneDef = {
 
     switch (target) {
       case 'girl': {
+        if (spell.supports.includes('pull') && !isAttack(spell)) {
+          o.flags.girl = 'grateful';
+          o.discoveries.push('引き寄せ×女の子：岩の下から引っぱり出す');
+          return outcome(saved(o, '女の子を引き寄せて助けた', '✦ 女の子の体がふわりと浮いて、こちらへ飛んできた！', '岩は誰もいない地面に落ちた。'));
+        }
         if (spell.supports.includes('boost')) {
           if (spell.elements.length > 0) {
             o.flags.girl = 'overcharged';
@@ -106,6 +111,12 @@ export const rockfall: SceneDef = {
       }
       case 'rock': {
         if (spell.shapes.includes('wall')) return outcome(walled(o));
+        if (spell.supports.includes('pull') && !isAttack(spell)) {
+          o.flags.girl = 'grateful';
+          o.hearts -= 1;
+          o.discoveries.push('引き寄せ×岩：岩がこっちへ飛んでくる');
+          return outcome(saved(o, '岩を引き寄せて女の子を助けた', '岩がこちらへ飛んできた！ よけきれずにハートを1つ失った。', 'でも女の子は無事だ。'));
+        }
         if (spell.supports.includes('boost') && !isAttack(spell)) {
           o.discoveries.push('強化×岩：岩が大きくなる');
           return outcome(hurt(o, '岩が……ひとまわり大きくなった。'));

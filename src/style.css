@@ -143,5 +143,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .hearts.big { font-size: 26px; margin: 0; }
 .log .scene { font-weight: 700; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
 .log .stage { font-weight: 800; margin-top: 16px; padding: 6px 10px; border-radius: 8px; background: var(--accent); color: var(--on-accent); }
+.log .flash { font-weight: 700; color: var(--accent); }
+.forget { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .page ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 .taboo { color: var(--danger); }

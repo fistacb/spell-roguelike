@@ -10,10 +10,10 @@ export interface Region {
 
 export const REGIONS: Record<RegionId, Region> = {
   home: { name: '故郷の村はずれ', scenes: ['barn', 'crows'] },
-  mountain: { name: '山道', scenes: ['bear', 'wolves'] },
-  river: { name: '川沿いの道', scenes: ['ferry', 'slime'] },
-  forest: { name: '霧の森', scenes: ['fog'] },
-  road: { name: '街道', scenes: [] },
+  mountain: { name: '山道', scenes: ['bear', 'wolves', 'valley', 'golem'] },
+  river: { name: '川沿いの道', scenes: ['ferry', 'slime', 'flood', 'frogs'] },
+  forest: { name: '霧の森', scenes: ['fog', 'mushroom', 'fox'] },
+  road: { name: '街道', scenes: ['bandits', 'merchant'] },
 };
 
 // 分かれ道に並ぶ、言葉で切り開く地域

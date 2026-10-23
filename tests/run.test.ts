@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { cast, currentScene, INN_HEARTS, MAX_HEARTS, newRun, START_CHAR_LIMIT, START_HEARTS, type RunState } from '../src/game/run';
+import { cast, currentScene, forget, handSize, INN_HEARTS, MAX_HEARTS, newRun, START_CHAR_LIMIT, START_HEARTS, type RunState } from '../src/game/run';
 import { buildStage, SCENES, STAGE_COUNT, STAGE_LENGTH } from '../src/game/scenes';
-import { STARTING_WORDS } from '../src/game/words';
+import { HAND_LIMIT, STARTING_WORDS } from '../src/game/words';
 
 const first = () => 0; // 予告は候補の1つめ
-const stage1 = ['rockfall', 'imp', 'barn'];
+const stage1 = ['rockfall', 'imp', 'barn', 'crows', 'valley'];
+// 最初のステージを抜けて分かれ道に着くまでの呪文
+const toFork = ['岩に雷槍', '炎槍', '納屋に壁', 'かかしに雷', '壁'];
 
 function seeded(seed: number) {
   let x = seed / 20;
@@ -66,7 +68,7 @@ describe('旅の進行', () => {
   });
 
   it('ハートが0になると疲れて故郷に帰る', () => {
-    let run = newRun(first, ['bear', 'barn', 'crows']);
+    let run = newRun(first, ['bear', 'barn', 'crows', 'fog', 'fox']);
     run = { ...run, owned: [...run.owned, 'boost'] };
     run = cast(run, '熊に強化').run; // -2
     expect(run.hearts).toBe(START_HEARTS - 2);
@@ -76,9 +78,9 @@ describe('旅の進行', () => {
   });
 
   it('ステージの終わりに宿でハートが回復し、分かれ道になる', () => {
-    let run = play(newRun(first, stage1), ['岩に雷槍', '炎槍']);
+    let run = play(newRun(first, stage1), toFork.slice(0, -1));
     const hearts = run.hearts;
-    run = cast(run, '納屋に壁', first).run;
+    run = cast(run, '壁', first).run;
     expect(run.phase).toBe('fork');
     expect(run.hearts).toBe(Math.min(MAX_HEARTS, hearts + INN_HEARTS));
     expect(currentScene(run).id).toBe('crossroads');
@@ -86,7 +88,7 @@ describe('旅の進行', () => {
   });
 
   it('分かれ道で言葉が効いた道へ進み、文字数の上限が2増える', () => {
-    let run = play(newRun(first, stage1), ['岩に雷槍', '炎槍', '納屋に壁']);
+    let run = play(newRun(first, stage1), toFork);
     run = cast(run, '大岩に槍', first).run;
     expect(run.phase).toBe('scene');
     expect(run.stage).toBe(1);
@@ -96,14 +98,14 @@ describe('旅の進行', () => {
   });
 
   it('どの道も開かなければ街道へ。同じ場面は二度起きない', () => {
-    let run = play(newRun(first, stage1), ['岩に雷槍', '炎槍', '納屋に壁']);
+    let run = play(newRun(first, stage1), toFork);
     run = cast(run, '壁', first).run;
     expect(run.region).toBe('road');
     expect(new Set(run.usedScenes).size).toBe(run.usedScenes.length);
   });
 
   it('行った地域は次の分かれ道に出ない', () => {
-    let run = play(newRun(first, stage1), ['岩に雷槍', '炎槍', '納屋に壁', '大川に氷']);
+    let run = play(newRun(first, stage1), [...toFork, '大川に氷']);
     expect(run.region).toBe('river');
     for (let i = 0; i < STAGE_LENGTH; i++) run = { ...cast({ ...run, hearts: MAX_HEARTS }, '壁', first).run };
     expect(run.phase).toBe('fork');
@@ -143,10 +145,32 @@ describe('旅の進行', () => {
   });
 
   it('もう持っている言葉をもらったらハート+1', () => {
-    let run = newRun(first, ['bear', 'barn', 'crows']);
+    let run = newRun(first, ['bear', 'barn', 'crows', 'fog', 'fox']);
     run = { ...run, owned: [...run.owned, 'earth'] };
     const hearts = run.hearts;
     run = cast(run, '壁').run;
     expect(run.hearts).toBe(hearts + 1);
+  });
+
+  it('2つの言葉をいっしょに唱えると、混ざって新しい言葉が生まれる', () => {
+    let run = newRun(first, stage1);
+    run = cast(run, '岩に炎氷槍').run;
+    expect(run.owned).toContain('steam');
+    expect(run.log.some((l) => l.includes('「蒸気」が生まれた'))).toBe(true);
+  });
+
+  it('手札が上限を超えたら、忘れるまで唱えられない', () => {
+    let run = newRun(first, stage1);
+    run = { ...run, owned: [...run.owned, 'earth', 'wind', 'blade', 'rain', 'chain', 'boost', 'frost', 'regret'] };
+    expect(handSize(run.owned)).toBe(HAND_LIMIT);
+    run = cast(run, '岩に雷槍').run; // 礫と癒しが増える
+    expect(run.mustForget).toBe(true);
+    expect(cast(run, '炎槍').error).toBeTruthy();
+    run = forget(run, 'blade');
+    expect(run.mustForget).toBe(true);
+    expect(forget(run, 'regret').owned).toContain('regret'); // 黒い言葉は忘れられない
+    run = forget(run, 'rain');
+    expect(run.mustForget).toBe(false);
+    expect(handSize(run.owned)).toBe(HAND_LIMIT);
   });
 });
