@@ -77,8 +77,13 @@ describe('いたずら小鬼（1回の詠唱で決着）', () => {
     expect(o.hearts).toBe(0);
     expect(o.flags.wallStands).toBe(false);
   });
-  it('鎖なら捕まえられる', () => {
-    expect(play('imp', '鎖').summary).toBe('小鬼を懲らしめた');
+  it('鎖だけでは振りほどかれる', () => {
+    expect(play('imp', '鎖').summary).not.toBe('小鬼を懲らしめた');
+  });
+  it('弱らせれば鎖で捕まえられる', () => {
+    // 雨4＋鎖2＝6で倒しきれないが、しぶとさ8の半分を超えるので捕まえる
+    expect(play('imp', '炎雨').summary).not.toBe('小鬼を懲らしめた');
+    expect(play('imp', '炎雨鎖').summary).toBe('小鬼を懲らしめた');
   });
   it('後悔は威力2倍だがハート-1', () => {
     const o = play('imp', '後悔炎槍');

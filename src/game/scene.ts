@@ -173,13 +173,19 @@ export function fight(spell: Spell, opts: FightOptions): FightResult {
     const extra = opts.extraMult?.mult ?? 1;
     if (opts.extraMult && hits.length > 0) r.log.push(opts.extraMult.line);
     for (const p of hits) r.damage += Math.ceil(p * emult * extra * mult);
-    if (spell.shapes.includes('chain') && enemy.chainable) {
-      captured = true;
-      r.log.push(`鎖が${enemy.name}を縛り上げた！`);
-    }
   }
   r.damage += opts.bonusDamage ?? 0;
   const toughness = enemy.toughness - (opts.toughnessDown ?? 0);
+  // 鎖はしぶとさの半分以上を削って弱らせたときだけ捕まえられる
+  if (targetsEnemy(spell, enemy) && spell.shapes.includes('chain') && enemy.chainable) {
+    if (r.damage >= Math.ceil(toughness / 2)) {
+      captured = true;
+      r.log.push(`弱った${enemy.name}を鎖が縛り上げた！`);
+      r.discoveries.push('鎖：弱らせてから使うと捕まえられる');
+    } else {
+      r.log.push(`${enemy.name}はまだ元気で、鎖を振りほどいた。`);
+    }
+  }
   r.defeated = captured || r.damage >= toughness;
   if (r.damage > 0) r.log.push(`${enemy.name}に${r.damage}の力が届いた（倒すには${toughness}）。`);
 
