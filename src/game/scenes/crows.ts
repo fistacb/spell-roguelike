@@ -1,7 +1,7 @@
 // 畑のカラス：村の麦畑がカラスの群れに荒らされている
 
 import { isAttack } from '../parse';
-import { emptyOutcome, fight, outcome, REGRET_LINE, type Enemy, type SceneDef } from '../scene';
+import { absorb, emptyOutcome, fight, outcome, REGRET_LINE, type Enemy, type SceneDef } from '../scene';
 
 // 群れなので、雨はよく効き、槍は1羽にしか当たらない
 const CROWS: Enemy = { name: 'カラスの群れ', targets: ['crow'], toughness: 8, chainable: false, shapeMult: { rain: 2, spear: 0.5 } };
@@ -54,15 +54,25 @@ export const crows: SceneDef = {
         o.discoveries.push('炎×かかし：燃えるだけ');
       }
     }
+    const atCrows = spell.target === null || spell.target === 'crow' || spell.target === 'enemy';
+    if (atCrows && spell.elements.includes('wind')) {
+      o.hearts += 1;
+      o.log.push('✦ 強い向かい風が吹きつけた！ カラスたちは羽ばたいても前に進めない。', 'やがてあきらめて、森の方へ流されていった。', THANKS);
+      o.discoveries.push('風×カラス：向かい風で飛べなくなる');
+      o.summary = '向かい風でカラスを追い払った';
+      return outcome(o);
+    }
     if (spell.target === 'field' && spell.shapes.includes('wall') && !isAttack(spell)) {
       o.log.push('麦畑のまわりに壁が立った。カラスは麦に近づけない。');
       o.discoveries.push('壁×麦畑：カラスから畑を守る');
     }
 
     const r = fight(spell, { enemy: CROWS, intent });
-    o.log.push(...r.log);
-    o.hearts += r.hearts;
-    o.discoveries.push(...r.discoveries);
+    absorb(o, r);
+    if (r.slept) {
+      o.summary = 'カラスの群れを眠らせて通り抜けた';
+      return outcome(o);
+    }
     if (spell.shapes.includes('rain') && spell.target !== 'field') o.discoveries.push('雨×群れ：全員に当たってよく効く');
     if (r.defeated) {
       o.hearts += 1;

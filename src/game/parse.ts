@@ -16,6 +16,8 @@ export interface Spell {
   shapes: Shape[];
   supports: Support[];
   tricks: Trick[];
+  // 色をまとった相手にも半減されない言葉が入っている
+  pure: boolean;
   target: TargetId | null;
   regret: boolean;
   // 発動に使われたワード（カード発光の順番）
@@ -95,6 +97,7 @@ export function parseSpell(input: string, owned: ReadonlySet<string>): Spell {
     shapes: [],
     supports: [],
     tricks: [],
+    pure: false,
     target: null,
     regret: false,
     usedWordIds: [],
@@ -112,8 +115,10 @@ export function parseSpell(input: string, owned: ReadonlySet<string>): Spell {
         spell.shapes.push(word.shape);
         break;
       case 'compound':
-        if (!spell.elements.includes(word.element)) spell.elements.push(word.element);
-        spell.shapes.push(word.shape);
+        if (word.element && !spell.elements.includes(word.element)) spell.elements.push(word.element);
+        spell.shapes.push(...word.shapes);
+        for (const t of word.tricks ?? []) if (!spell.tricks.includes(t)) spell.tricks.push(t);
+        if (word.pure) spell.pure = true;
         break;
       case 'trick':
         if (!spell.tricks.includes(word.trick)) spell.tricks.push(word.trick);

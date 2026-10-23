@@ -1,22 +1,29 @@
 import type { Rng, SceneDef } from '../scene';
+import { bandits } from './bandits';
 import { barn } from './barn';
 import { bear } from './bear';
 import { crows } from './crows';
 import { ferry } from './ferry';
+import { flood } from './flood';
 import { fog } from './fog';
+import { fox } from './fox';
+import { frogs } from './frogs';
+import { golem } from './golem';
 import { imp } from './imp';
+import { merchant } from './merchant';
+import { mushroom } from './mushroom';
 import { REGIONS, type RegionId } from './regions';
 import { rockfall } from './rockfall';
 import { slime } from './slime';
+import { valley } from './valley';
 import { wolves } from './wolves';
 
 export const SCENES: Record<string, SceneDef> = Object.fromEntries(
-  [rockfall, imp, wolves, barn, bear, slime, crows, ferry, fog].map((s) => [s.id, s]),
+  [rockfall, imp, wolves, barn, bear, slime, crows, ferry, fog, valley, golem, flood, frogs, mushroom, fox, bandits, merchant].map((s) => [s.id, s]),
 );
 
 export const STAGE_COUNT = 3;
-// 場面の候補が増えるまでは1ステージ3場面にしておく（目標は5場面）
-export const STAGE_LENGTH = 3;
+export const STAGE_LENGTH = 5;
 
 // 続けて起きる1組。最初のステージで必ず起きる
 const OPENING = ['rockfall', 'imp'];

@@ -2,42 +2,84 @@
 
 export type Element = 'fire' | 'ice' | 'thunder' | 'earth' | 'wind';
 export type Shape = 'spear' | 'blade' | 'rain' | 'wall' | 'chain';
-export type Support = 'boost' | 'heal';
+// 物や相手の状態を変える言葉
+export type Support = 'boost' | 'heal' | 'sleep' | 'echo' | 'flow' | 'pull';
 // 出来事から生まれる、攻撃ではない小技
-export type Trick = 'smoke' | 'frost';
+export type Trick = 'smoke' | 'frost' | 'mud' | 'ash' | 'quiet';
 export type TargetId =
   | 'rock' | 'girl' | 'tree' | 'stream' | 'imp' | 'self' | 'enemy'
   | 'wolf' | 'bridge' | 'barn' | 'villager' | 'well'
   | 'bear' | 'hive' | 'slime' | 'swamp' | 'grass'
-  | 'crow' | 'scarecrow' | 'field' | 'river' | 'boat' | 'boatman' | 'fog' | 'lantern' | 'owl' | 'boulder';
+  | 'crow' | 'scarecrow' | 'field' | 'river' | 'boat' | 'boatman' | 'fog' | 'lantern' | 'owl' | 'boulder'
+  | 'snow' | 'golem' | 'spring' | 'child' | 'oldbridge' | 'torrent' | 'frog' | 'pond' | 'lily'
+  | 'mushroom' | 'cage' | 'poacher' | 'fairy' | 'kit' | 'pit' | 'vixen' | 'bandit' | 'cart'
+  | 'merchant' | 'donkey' | 'pack';
 
+// hint：カードをタップしたときの、効果をはっきり言わない一言
+// flash：混ざった言葉などが効いたときの演出
 export type Word =
-  | { id: string; text: string; kind: 'element'; element: Element }
-  | { id: string; text: string; kind: 'shape'; shape: Shape }
-  | { id: string; text: string; kind: 'support'; support: Support }
-  | { id: string; text: string; kind: 'compound'; element: Element; shape: Shape }
-  | { id: string; text: string; kind: 'trick'; trick: Trick }
-  | { id: string; text: string; kind: 'black'; black: 'regret' }
+  | { id: string; text: string; kind: 'element'; element: Element; hint: string }
+  | { id: string; text: string; kind: 'shape'; shape: Shape; hint: string }
+  | { id: string; text: string; kind: 'support'; support: Support; hint: string }
+  | {
+    id: string; text: string; kind: 'compound'; hint: string; flash: string;
+    element?: Element; shapes: Shape[]; tricks?: Trick[];
+    // 色をまとった相手にも半減されない
+    pure?: boolean;
+  }
+  | { id: string; text: string; kind: 'trick'; trick: Trick; hint: string }
+  | { id: string; text: string; kind: 'black'; black: 'regret'; hint: string }
   | { id: string; text: string; kind: 'target'; target: TargetId; aliases?: string[] };
 
 export const WORDS: Word[] = [
-  { id: 'fire', text: '炎', kind: 'element', element: 'fire' },
-  { id: 'ice', text: '氷', kind: 'element', element: 'ice' },
-  { id: 'thunder', text: '雷', kind: 'element', element: 'thunder' },
-  { id: 'earth', text: '土', kind: 'element', element: 'earth' },
-  { id: 'wind', text: '風', kind: 'element', element: 'wind' },
-  { id: 'spear', text: '槍', kind: 'shape', shape: 'spear' },
-  { id: 'blade', text: '刃', kind: 'shape', shape: 'blade' },
-  { id: 'rain', text: '雨', kind: 'shape', shape: 'rain' },
-  { id: 'wall', text: '壁', kind: 'shape', shape: 'wall' },
-  { id: 'chain', text: '鎖', kind: 'shape', shape: 'chain' },
-  { id: 'boost', text: '強化', kind: 'support', support: 'boost' },
-  { id: 'heal', text: '癒し', kind: 'support', support: 'heal' },
-  { id: 'regret', text: '後悔', kind: 'black', black: 'regret' },
+  { id: 'fire', text: '炎', kind: 'element', element: 'fire', hint: '熱い。乾いたものほどよく燃える。' },
+  { id: 'ice', text: '氷', kind: 'element', element: 'ice', hint: '冷たい。水があるところで本当の力が出る。' },
+  { id: 'thunder', text: '雷', kind: 'element', element: 'thunder', hint: 'ぴりぴりする。濡れたものの中を走りたがっている。' },
+  { id: 'earth', text: '土', kind: 'element', element: 'earth', hint: '重くて、どっしりしている。何かをふさぐのが得意そう。' },
+  { id: 'wind', text: '風', kind: 'element', element: 'wind', hint: 'どこかへ吹き抜けていく音。もやもやしたものが嫌いらしい。' },
+  { id: 'spear', text: '槍', kind: 'shape', shape: 'spear', hint: 'まっすぐ一点を貫く。' },
+  { id: 'blade', text: '刃', kind: 'shape', shape: 'blade', hint: '二度、すばやく切りつける。ロープや草なら簡単に切れそう。' },
+  { id: 'rain', text: '雨', kind: 'shape', shape: 'rain', hint: 'ぱらぱらと広く降る。たくさんいる相手に。' },
+  { id: 'wall', text: '壁', kind: 'shape', shape: 'wall', hint: '立ちふさがって、守る。同じ色の攻撃にはとくに強い。' },
+  { id: 'chain', text: '鎖', kind: 'shape', shape: 'chain', hint: '縛る、つなぐ。弱ったものほど逃げられない。' },
+  { id: 'boost', text: '強化', kind: 'support', support: 'boost', hint: 'かけたものが、少しだけ大きく、強くなる。かける相手は選んで。' },
+  { id: 'heal', text: '癒し', kind: 'support', support: 'heal', hint: 'やさしい光。傷ついたものなら、なんでも。' },
+  { id: 'sleep', text: '眠り', kind: 'support', support: 'sleep', hint: 'まぶたが重くなるような響き。' },
+  { id: 'echo', text: '響き', kind: 'support', support: 'echo', hint: '声が山に跳ね返ってくる。大きな音は、眠っているものに届く。' },
+  { id: 'flow', text: '流れ', kind: 'support', support: 'flow', hint: '水は低い方へ、どこまでも。' },
+  { id: 'pull', text: '引き寄せ', kind: 'support', support: 'pull', hint: '遠くのものが、手の届くところへ。' },
+  { id: 'regret', text: '後悔', kind: 'black', black: 'regret', hint: '胸の奥で、黒く重たく沈んでいる。すがれば力になるが、痛む。' },
   // 出来事ワード：起こした出来事がそのまま言葉になる
-  { id: 'smoke', text: '煙', kind: 'trick', trick: 'smoke' },
-  { id: 'frost', text: '霜', kind: 'trick', trick: 'frost' },
-  { id: 'gravel', text: '礫', kind: 'compound', element: 'earth', shape: 'rain' },
+  { id: 'smoke', text: '煙', kind: 'trick', trick: 'smoke', hint: 'もくもくと、だれの目もごまかせそうな匂い。' },
+  { id: 'frost', text: '霜', kind: 'trick', trick: 'frost', hint: '足もとがひやりとする。走ってくるものは滑りそう。' },
+  { id: 'ash', text: '灰', kind: 'trick', trick: 'ash', hint: '燃え尽きたあとの、さらさらした匂い。火も足跡も覆ってしまう。' },
+  { id: 'quiet', text: '静けさ', kind: 'trick', trick: 'quiet', hint: 'しんとしている。この言葉の中では、どんな音も小さくなる。' },
+  {
+    id: 'gravel', text: '礫', kind: 'compound', element: 'earth', shapes: ['rain'], pure: true,
+    hint: '手のひらで小石がざらざら鳴っている。ばらまけば、あちこちに当たりそう。',
+    flash: '小石が雨あられと降り注いだ！',
+  },
+  // 混ざって生まれる言葉：特定の言葉をいっしょに唱えると生まれる
+  {
+    id: 'steam', text: '蒸気', kind: 'compound', shapes: ['rain'], tricks: ['smoke'], pure: true,
+    hint: '熱い霧。燃えも凍りもしないが、あたり一面に届く。',
+    flash: '熱い蒸気があたり一面に噴き出した！',
+  },
+  {
+    id: 'mud', text: '泥', kind: 'compound', element: 'earth', shapes: [], tricks: ['mud'],
+    hint: '重く、まとわりつく。動きの速いものほど嫌がりそう。',
+    flash: '泥がべったりとまとわりついた！',
+  },
+  {
+    id: 'storm', text: '嵐', kind: 'compound', element: 'thunder', shapes: ['rain', 'rain'],
+    hint: 'ごうごうと荒れ狂う。まわりのものまで巻きこみそう。',
+    flash: '稲妻まじりの嵐が吹き荒れた！',
+  },
+  {
+    id: 'sparks', text: '火の粉', kind: 'compound', element: 'fire', shapes: ['rain'],
+    hint: '小さな火が、風に乗ってどこまでも広がっていく。',
+    flash: '火の粉が風に乗って広がった！',
+  },
   { id: 'rock', text: '岩', kind: 'target', target: 'rock' },
   { id: 'girl', text: '女の子', kind: 'target', target: 'girl', aliases: ['少女'] },
   { id: 'tree', text: '木', kind: 'target', target: 'tree', aliases: ['枯れ木', '枯木', '大木'] },
@@ -66,11 +108,43 @@ export const WORDS: Word[] = [
   { id: 'lantern', text: 'ランタン', kind: 'target', target: 'lantern', aliases: ['灯り'] },
   { id: 'owl', text: 'フクロウ', kind: 'target', target: 'owl', aliases: ['ふくろう', '梟'] },
   { id: 'boulder', text: '大岩', kind: 'target', target: 'boulder' },
+  { id: 'snow', text: '雪', kind: 'target', target: 'snow', aliases: ['雪庇', '積もった雪'] },
+  { id: 'golem', text: 'ゴーレム', kind: 'target', target: 'golem', aliases: ['岩人形'] },
+  { id: 'spring', text: '泉', kind: 'target', target: 'spring', aliases: ['湧き水'] },
+  { id: 'child', text: '子ども', kind: 'target', target: 'child', aliases: ['男の子', '子供'] },
+  { id: 'oldbridge', text: '古い橋', kind: 'target', target: 'oldbridge', aliases: ['古橋'] },
+  { id: 'torrent', text: '濁流', kind: 'target', target: 'torrent' },
+  { id: 'frog', text: 'カエル', kind: 'target', target: 'frog', aliases: ['蛙', 'かえる'] },
+  { id: 'pond', text: '池', kind: 'target', target: 'pond' },
+  { id: 'lily', text: '蓮の葉', kind: 'target', target: 'lily', aliases: ['蓮'] },
+  { id: 'mushroom', text: '眠り茸', kind: 'target', target: 'mushroom', aliases: ['茸', 'きのこ', 'キノコ'] },
+  { id: 'cage', text: '檻', kind: 'target', target: 'cage', aliases: ['鳥かご'] },
+  { id: 'poacher', text: '密猟者', kind: 'target', target: 'poacher', aliases: ['男'] },
+  { id: 'fairy', text: '妖精', kind: 'target', target: 'fairy' },
+  { id: 'kit', text: '子ぎつね', kind: 'target', target: 'kit', aliases: ['子狐', '子ギツネ'] },
+  { id: 'pit', text: '穴', kind: 'target', target: 'pit', aliases: ['落とし穴'] },
+  { id: 'vixen', text: '母ぎつね', kind: 'target', target: 'vixen', aliases: ['母狐', 'きつね', '狐'] },
+  { id: 'bandit', text: '盗賊', kind: 'target', target: 'bandit', aliases: ['盗賊たち'] },
+  { id: 'cart', text: '荷車', kind: 'target', target: 'cart' },
+  { id: 'merchant', text: '行商人', kind: 'target', target: 'merchant', aliases: ['商人'] },
+  { id: 'donkey', text: 'ロバ', kind: 'target', target: 'donkey', aliases: ['驢馬'] },
+  { id: 'pack', text: '荷物', kind: 'target', target: 'pack', aliases: ['荷'] },
 ];
 
 // 旅の始めに持っているワード。対象語は場面が提供するので所持に含めない
 // 残りの言葉は、場面の結果や出来事で手に入れる
 export const STARTING_WORDS = ['fire', 'ice', 'thunder', 'spear', 'wall'];
+
+// 混ざって生まれる言葉：この2つをいっしょに唱えると生まれる
+export const COMBOS: { ids: [string, string]; result: string }[] = [
+  { ids: ['fire', 'ice'], result: 'steam' },
+  { ids: ['earth', 'rain'], result: 'mud' },
+  { ids: ['thunder', 'rain'], result: 'storm' },
+  { ids: ['wind', 'fire'], result: 'sparks' },
+];
+
+// 持てる言葉の数（黒い言葉は数えない）
+export const HAND_LIMIT = 12;
 
 export const ELEMENT_INFO: Record<Element, { label: string; color: string }> = {
   fire: { label: '炎', color: '#e4572e' },
@@ -81,6 +155,7 @@ export const ELEMENT_INFO: Record<Element, { label: string; color: string }> = {
 };
 
 export const BLACK_COLOR = '#222222';
+const STEAM_COLOR = '#c9d3dc';
 
 export function wordById(id: string): Word {
   const word = WORDS.find((w) => w.id === id);
@@ -89,7 +164,17 @@ export function wordById(id: string): Word {
 }
 
 export function wordColor(word: Word): string {
-  if (word.kind === 'element' || word.kind === 'compound') return ELEMENT_INFO[word.element].color;
+  if (word.kind === 'element') return ELEMENT_INFO[word.element].color;
+  if (word.kind === 'compound') return word.element ? ELEMENT_INFO[word.element].color : STEAM_COLOR;
   if (word.kind === 'black') return BLACK_COLOR;
   return '#8a8a8a';
+}
+
+export function wordHint(word: Word): string {
+  return word.kind === 'target' ? '' : word.hint;
+}
+
+// 手札の上限に数える言葉
+export function countsToHand(id: string): boolean {
+  return wordById(id).kind !== 'black';
 }

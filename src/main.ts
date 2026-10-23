@@ -1,15 +1,16 @@
 import './style.css';
 import { countLength } from './game/parse';
-import { cast, currentScene, endingMessage, MAX_HEARTS, newRun, regionName, type RunState } from './game/run';
+import { cast, currentScene, endingMessage, forget, MAX_HEARTS, newRun, regionName, type RunState } from './game/run';
 import { STAGE_COUNT } from './game/scenes';
 import type { SceneObject } from './game/scene';
 import { addRun, clearJourney, emptySave, loadJourney, loadSave, writeJourney, writeSave, type SaveData } from './game/save';
-import { ELEMENT_INFO, wordById, wordColor } from './game/words';
+import { countsToHand, ELEMENT_INFO, HAND_LIMIT, wordById, wordColor, wordHint } from './game/words';
 
 const app = document.getElementById('app')!;
 let save: SaveData = loadSave();
 let run: RunState | null = null;
 let selectedObject: string | null = null;
+let selectedCard: string | null = null;
 let pendingWarning: { input: string; message: string } | null = null;
 let errorText = '';
 
@@ -44,6 +45,7 @@ function showTitle() {
           <li>どの場面も詠唱は1回だけ。結果で旅の続きが変わる。</li>
           <li>例：「岩に雷槍」「小川に氷」「土壁」「あいつに炎雨」</li>
           <li>場面にあるものはタップで調べられる。見つけた反応も確認できる。</li>
+          <li>言葉のカードをタップすると、その言葉の手触りがわかる。言葉どうしを混ぜると、新しい言葉が生まれることも。</li>
           <li>旅は3つのステージ。ステージの終わりの宿で記録され、分かれ道で次の道を選ぶ。</li>
           <li>ハートがなくなると、旅はそこでおしまい。</li>
         </ul>
@@ -183,6 +185,7 @@ function renderObjects() {
   el.querySelectorAll<HTMLButtonElement>('.object').forEach((btn) => {
     btn.onclick = () => {
       selectedObject = selectedObject === btn.dataset.id ? null : btn.dataset.id!;
+      selectedCard = null;
       renderInfo();
     };
   });
@@ -190,6 +193,11 @@ function renderObjects() {
 
 function renderInfo() {
   const el = document.getElementById('info')!;
+  if (selectedCard && run!.owned.includes(selectedCard)) {
+    const w = wordById(selectedCard);
+    el.innerHTML = `<div class="info"><b>${esc(w.text)}</b>：${esc(wordHint(w))}</div>`;
+    return;
+  }
   const obj = sceneObjects().find((o) => o.id === selectedObject);
   if (!obj) {
     el.innerHTML = '';
@@ -224,6 +232,7 @@ function renderLog() {
       if (line.startsWith('▶ ')) return `<p class="cast">${esc(line)}</p>`;
       if (line.startsWith('◆ ')) return `<p class="scene">${esc(line.slice(2))}</p>`;
       if (line.startsWith('■ ')) return `<p class="stage">${esc(line.slice(2))}</p>`;
+      if (line.startsWith('✦ ')) return `<p class="flash">${esc(line)}</p>`;
       return `<p>${esc(line)}</p>`;
     })
     .join('');
@@ -235,9 +244,17 @@ function renderCards() {
   el.innerHTML = run!.owned
     .map((id) => {
       const w = wordById(id);
-      return `<div class="card ${w.kind === 'black' ? 'black' : ''}" data-id="${id}" style="--card-color:${wordColor(w)}">${esc(w.text)}</div>`;
+      return `<button type="button" class="card ${w.kind === 'black' ? 'black' : ''}" data-id="${id}" style="--card-color:${wordColor(w)}">${esc(w.text)}</button>`;
     })
     .join('');
+  // カードをタップすると、その言葉の手触りを表示する
+  el.querySelectorAll<HTMLButtonElement>('.card').forEach((card) => {
+    card.onclick = () => {
+      selectedCard = selectedCard === card.dataset.id ? null : card.dataset.id!;
+      selectedObject = null;
+      renderInfo();
+    };
+  });
 }
 
 function glowCards(ids: string[]) {
@@ -262,7 +279,7 @@ function renderCounter() {
   const n = countLength(input.value);
   counter.textContent = `${n}/${run.charLimit}`;
   counter.classList.toggle('over', n > run.charLimit);
-  const playable = run.phase !== 'record';
+  const playable = run.phase !== 'record' && !run.mustForget;
   button.disabled = !playable || n === 0 || n > run.charLimit;
   input.disabled = !playable;
 }
@@ -273,6 +290,10 @@ function renderError() {
 
 function renderModal() {
   const el = document.getElementById('modal')!;
+  if (run?.mustForget && run.phase !== 'record') {
+    renderForget(el);
+    return;
+  }
   if (!pendingWarning) {
     el.innerHTML = '';
     return;
@@ -291,6 +312,27 @@ function renderModal() {
     renderModal();
     doCast(text);
   };
+}
+
+// 手札があふれたら、忘れる言葉を1つ選ぶ
+function renderForget(el: HTMLElement) {
+  const ids = run!.owned.filter(countsToHand);
+  el.innerHTML = `<div class="modal-back"><div class="modal">
+    <div>持てる言葉は${HAND_LIMIT}個まで。忘れる言葉を1つ選んでください。</div>
+    <div class="forget">${ids
+      .map((id) => {
+        const w = wordById(id);
+        return `<button type="button" class="card" data-id="${id}" style="--card-color:${wordColor(w)}">${esc(w.text)}</button>`;
+      })
+      .join('')}</div>
+  </div></div>`;
+  el.querySelectorAll<HTMLButtonElement>('.forget .card').forEach((btn) => {
+    btn.onclick = () => {
+      run = forget(run!, btn.dataset.id!);
+      if (selectedCard === btn.dataset.id) selectedCard = null;
+      renderGame();
+    };
+  });
 }
 
 // ---- 旅の記録 ----

@@ -1,6 +1,6 @@
 // いたずら小鬼：落石の犯人。落石の場面の結果で条件が変わる
 
-import { emptyOutcome, fight, outcome, spellMultiplier, type Enemy, type SceneDef } from '../scene';
+import { absorb, emptyOutcome, fight, outcome, spellMultiplier, type Enemy, type SceneDef } from '../scene';
 
 const IMP: Enemy = { name: '小鬼', targets: ['imp'], toughness: 8, chainable: true };
 
@@ -108,10 +108,12 @@ export const imp: SceneDef = {
       wallStands: flags.wallStands,
     });
     if (thunderInWater) o.discoveries.push('雷×小川を渡る敵：感電して2倍');
-    o.log.push(...r.log);
-    o.hearts += r.hearts;
-    o.discoveries.push(...r.discoveries);
+    absorb(o, r);
     o.flags = { ...flags, impStunned: false, wallStands: r.usedWall ? false : flags.wallStands };
+    if (r.slept) {
+      o.summary = '小鬼を眠らせて通り抜けた';
+      return outcome(o);
+    }
     o.summary = r.defeated ? '小鬼を懲らしめた' : '小鬼に逃げられた';
     if (!r.defeated) o.log.push('小鬼は「べーっだ！」と逃げていった。');
     else {
