@@ -4,7 +4,8 @@ import { isAttack, isEmpty } from '../parse';
 import { emptyOutcome, outcome, REGRET_LINE, type Outcome, type SceneDef } from '../scene';
 
 function putOut(o: Outcome, line: string, discovery: string): Outcome {
-  o.log.push(line, '火が消えた！ 村人がお礼に焼きりんごをくれた。ハートが1つ増えた。');
+  o.log.push(line, '火が消えた！ 村人がお礼に焼きりんごをくれた。ハートが1つ増えた。', '村人「力が湧くおまじないを教えてやろう」');
+  o.reward = 'boost';
   o.hearts += 1;
   o.discoveries.push(discovery);
   o.summary = '納屋の火事を消した';

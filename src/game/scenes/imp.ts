@@ -10,7 +10,7 @@ export const imp: SceneDef = {
   kind: 'battle',
   intents: [
     { name: '土の投石', element: 'earth', hearts: 1, inWater: false, description: '崖の上から石を投げようとしている' },
-    { name: '雷の体当たり', element: 'thunder', hearts: 2, inWater: true, description: '小川を渡って体当たりしようとしている' },
+    { name: '雷の体当たり', element: 'thunder', hearts: 2, inWater: true, charge: true, description: '小川を渡って体当たりしようとしている' },
   ],
   intro(flags) {
     const lines = ['崖の上から、岩を落とした犯人のいたずら小鬼が飛び降りてきた！'];
@@ -52,11 +52,13 @@ export const imp: SceneDef = {
     const touchesStream = spell.target === 'stream' || spell.shapes.includes('rain');
     if (touchesTree && spell.elements.includes('fire') && !flags.treeBurned) {
       flags.treeBurned = true;
+      o.gainWords.push('smoke');
       o.log.push('枯れ木が燃え上がった！ 煙で小鬼がむせている。');
       o.discoveries.push('炎×枯れ木：燃えて煙が出る（敵が弱る）');
     }
     if (touchesStream && spell.elements.includes('ice') && !flags.streamFrozen) {
       flags.streamFrozen = true;
+      o.gainWords.push('frost');
       o.log.push('小川が凍りついた。');
       o.discoveries.push('氷×小川：凍って滑る地面になる');
     }
@@ -112,7 +114,10 @@ export const imp: SceneDef = {
     o.flags = { ...flags, impStunned: false, wallStands: r.usedWall ? false : flags.wallStands };
     o.summary = r.defeated ? '小鬼を懲らしめた' : '小鬼に逃げられた';
     if (!r.defeated) o.log.push('小鬼は「べーっだ！」と逃げていった。');
-    else o.log.push('小鬼は「ごめんなさーい！」と逃げていった。');
+    else {
+      o.log.push('小鬼は「ごめんなさーい！」と逃げていった。', '小鬼が鎖を落としていった。');
+      o.reward = 'chain';
+    }
     return outcome(o);
   },
 };

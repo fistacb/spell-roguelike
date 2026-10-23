@@ -30,6 +30,10 @@ export interface Outcome {
   hearts: number;
   flags: Flags;
   gainRegret: boolean;
+  // 起こした出来事から生まれた言葉（煙・霜・礫）
+  gainWords: string[];
+  // うまく切り抜けたお礼の言葉。もう持っていればハート+1
+  reward: string | null;
   discoveries: string[];
   // 旅の記録に残す一言
   summary: string;
@@ -42,6 +46,8 @@ export interface Intent {
   hearts: number;
   // 小川などの水の中を通る攻撃か
   inWater: boolean;
+  // 地面を走ってくる攻撃か（霜で止められる）
+  charge?: boolean;
   description: string;
 }
 
@@ -73,7 +79,7 @@ export interface SceneDef {
 }
 
 export function emptyOutcome(): Outcome {
-  return { log: [], hearts: 0, flags: {}, gainRegret: false, discoveries: [], summary: '' };
+  return { log: [], hearts: 0, flags: {}, gainRegret: false, gainWords: [], reward: null, discoveries: [], summary: '' };
 }
 
 export const REGRET_LINE = '黒い言葉「後悔」を手に入れた。';
@@ -214,6 +220,19 @@ export function fight(spell: Spell, opts: FightOptions): FightResult {
     } else {
       loss = Math.max(0, loss - 1);
       r.log.push('壁が攻撃を少し和らげた。');
+    }
+  }
+  if (loss > 0 && spell.tricks.includes('smoke')) {
+    loss = 0;
+    r.log.push(`煙にまぎれて、${enemy.name}の${intent.name}をかわした！`);
+    r.discoveries.push('煙：敵の目をくらませて反撃をかわす');
+  } else if (loss > 0 && spell.tricks.includes('frost')) {
+    if (intent.charge) {
+      loss = 0;
+      r.log.push(`地面に霜が降りた。${enemy.name}は足をすべらせ、${intent.name}は届かなかった！`);
+      r.discoveries.push('霜：地面を走ってくる攻撃を止める');
+    } else {
+      r.log.push(`霜が降りたが、${intent.name}は地面を走ってこない。`);
     }
   }
   if (loss > 0) r.log.push(`${enemy.name}の${intent.name}！ ハートを${loss}つ失った。`);

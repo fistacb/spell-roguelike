@@ -6,9 +6,10 @@ import { emptyOutcome, fight, outcome, type Enemy, type Outcome, type SceneDef }
 const BEAR: Enemy = { name: '熊', targets: ['bear'], toughness: 12, chainable: true };
 
 function passed(o: Outcome, summary: string, discovery: string, ...lines: string[]): Outcome {
-  o.log.push(...lines);
+  o.log.push(...lines, '熊のいた森の土を、ひとつかみ持っていくことにした。');
   o.discoveries.push(discovery);
   o.summary = summary;
+  o.reward = 'earth';
   return o;
 }
 
@@ -17,7 +18,7 @@ export const bear: SceneDef = {
   title: '道をふさぐ熊',
   kind: 'event',
   intents: [
-    { name: '土の爪', element: 'earth', hearts: 2, inWater: false, description: '眠っている。起こすと爪で襲ってくる' },
+    { name: '土の爪', element: 'earth', hearts: 2, inWater: false, charge: true, description: '眠っている。起こすと爪で襲ってくる' },
   ],
   intro: () => ['細い山道の真ん中で、大きな熊がいびきをかいている。', 'そばの大木には、蜂の巣がぶら下がっている。'],
   objects: () => [
@@ -34,6 +35,10 @@ export const bear: SceneDef = {
       return outcome(o);
     }
     const target = spell.target ?? (isAttack(spell) ? 'bear' : 'self');
+    if (spell.tricks.includes('smoke') && !isAttack(spell) && target !== 'hive' && target !== 'tree') {
+      return outcome(passed(o, '煙にまぎれて熊の横を通った', '煙×眠る熊：煙にまぎれて通れる',
+        '煙があたりに立ちこめた。', 'その中を、熊に気づかれずに通り抜けた。'));
+    }
 
     switch (target) {
       case 'hive':

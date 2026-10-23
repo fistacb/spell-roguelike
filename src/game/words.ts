@@ -3,6 +3,8 @@
 export type Element = 'fire' | 'ice' | 'thunder' | 'earth' | 'wind';
 export type Shape = 'spear' | 'blade' | 'rain' | 'wall' | 'chain';
 export type Support = 'boost' | 'heal';
+// 出来事から生まれる、攻撃ではない小技
+export type Trick = 'smoke' | 'frost';
 export type TargetId =
   | 'rock' | 'girl' | 'tree' | 'stream' | 'imp' | 'self' | 'enemy'
   | 'wolf' | 'bridge' | 'barn' | 'villager' | 'well'
@@ -12,6 +14,8 @@ export type Word =
   | { id: string; text: string; kind: 'element'; element: Element }
   | { id: string; text: string; kind: 'shape'; shape: Shape }
   | { id: string; text: string; kind: 'support'; support: Support }
+  | { id: string; text: string; kind: 'compound'; element: Element; shape: Shape }
+  | { id: string; text: string; kind: 'trick'; trick: Trick }
   | { id: string; text: string; kind: 'black'; black: 'regret' }
   | { id: string; text: string; kind: 'target'; target: TargetId; aliases?: string[] };
 
@@ -29,6 +33,10 @@ export const WORDS: Word[] = [
   { id: 'boost', text: '強化', kind: 'support', support: 'boost' },
   { id: 'heal', text: '癒し', kind: 'support', support: 'heal' },
   { id: 'regret', text: '後悔', kind: 'black', black: 'regret' },
+  // 出来事ワード：起こした出来事がそのまま言葉になる
+  { id: 'smoke', text: '煙', kind: 'trick', trick: 'smoke' },
+  { id: 'frost', text: '霜', kind: 'trick', trick: 'frost' },
+  { id: 'gravel', text: '礫', kind: 'compound', element: 'earth', shape: 'rain' },
   { id: 'rock', text: '岩', kind: 'target', target: 'rock' },
   { id: 'girl', text: '女の子', kind: 'target', target: 'girl', aliases: ['少女'] },
   { id: 'tree', text: '木', kind: 'target', target: 'tree', aliases: ['枯れ木', '枯木', '大木'] },
@@ -50,11 +58,8 @@ export const WORDS: Word[] = [
 ];
 
 // 旅の始めに持っているワード。対象語は場面が提供するので所持に含めない
-export const STARTING_WORDS = [
-  'fire', 'ice', 'thunder', 'earth',
-  'spear', 'blade', 'rain', 'wall', 'chain',
-  'boost', 'heal',
-];
+// 残りの言葉は、場面の結果や出来事で手に入れる
+export const STARTING_WORDS = ['fire', 'ice', 'thunder', 'spear', 'wall'];
 
 export const ELEMENT_INFO: Record<Element, { label: string; color: string }> = {
   fire: { label: '炎', color: '#e4572e' },
@@ -73,7 +78,7 @@ export function wordById(id: string): Word {
 }
 
 export function wordColor(word: Word): string {
-  if (word.kind === 'element') return ELEMENT_INFO[word.element].color;
+  if (word.kind === 'element' || word.kind === 'compound') return ELEMENT_INFO[word.element].color;
   if (word.kind === 'black') return BLACK_COLOR;
   return '#8a8a8a';
 }
