@@ -114,6 +114,10 @@ export const imp: SceneDef = {
       o.summary = '小鬼を眠らせて通り抜けた';
       return outcome(o);
     }
+    if (r.hid) {
+      o.summary = '灰にまぎれて小鬼から逃れた';
+      return outcome(o);
+    }
     o.summary = r.defeated ? '小鬼を懲らしめた' : '小鬼に逃げられた';
     if (!r.defeated) o.log.push('小鬼は「べーっだ！」と逃げていった。');
     else {

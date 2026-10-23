@@ -73,6 +73,10 @@ export const crows: SceneDef = {
       o.summary = 'カラスの群れを眠らせて通り抜けた';
       return outcome(o);
     }
+    if (r.hid) {
+      o.summary = '灰にまぎれてカラスの群れから逃れた';
+      return outcome(o);
+    }
     if (spell.shapes.includes('rain') && spell.target !== 'field') o.discoveries.push('雨×群れ：全員に当たってよく効く');
     if (r.defeated) {
       o.hearts += 1;

@@ -367,3 +367,19 @@ describe('新しい場面', () => {
     expect(o.reward).toBe('pull');
   });
 });
+
+describe('灰', () => {
+  it('攻撃せずにまくと、どの戦闘でも戦わずに抜けられる。言葉はもらえない', () => {
+    for (const id of ['imp', 'crows', 'slime', 'golem', 'frogs', 'wolves']) {
+      const o = play(id, '灰', { intent: 0 });
+      expect(o.summary).toContain('灰にまぎれて');
+      expect(o.hearts).toBe(0);
+      expect(o.reward).toBeNull();
+    }
+  });
+  it('攻撃といっしょだと吹き散らされる', () => {
+    const o = play('slime', '灰炎槍', { intent: 0 });
+    expect(o.summary).not.toContain('灰にまぎれて');
+    expect(o.log).toContain('灰が舞い上がったが、呪文の勢いで吹き散らされてしまった。');
+  });
+});

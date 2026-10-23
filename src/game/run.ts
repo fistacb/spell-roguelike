@@ -5,7 +5,7 @@ import { pick, type Flags, type Intent, type Rng, type SceneDef } from './scene'
 import { buildStage, SCENES, STAGE_COUNT } from './scenes';
 import { makeCrossroads } from './scenes/crossroads';
 import { OPENABLE_REGIONS, REGIONS, type RegionId } from './scenes/regions';
-import { COMBOS, countsToHand, HAND_LIMIT, STARTING_WORDS, wordById } from './words';
+import { COMBOS, countsToHand, FIZZLE, HAND_LIMIT, STARTING_WORDS, wordById } from './words';
 
 export const START_CHAR_LIMIT = 6;
 // 文字数の上限はステージが進むごとに増える
@@ -160,7 +160,7 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   let owned = run.owned;
   let gainedWords = run.gainedWords;
   let taboos = run.taboos;
-  const log = [...run.log, `▶ ${spell.input}`, ...unownedNotes(spell), ...o.log];
+  const log = [...run.log, `▶ ${spell.input}`, ...unownedNotes(spell), ...o.log, ...fizzleNotes(spell, [...o.log, ...o.discoveries])];
   if (o.gainRegret) {
     if (owned.includes('regret')) {
       taboos = [...taboos, `禁忌：${o.summary}`];
@@ -253,6 +253,15 @@ export function forget(run: RunState, id: string): RunState {
     mustForget: handSize(owned) > HAND_LIMIT,
     log: [...run.log, `言葉「${wordById(id).text}」を忘れた。`],
   };
+}
+
+/** 唱えた言葉が何も起こさなかったら、空振りの一言を添える */
+function fizzleNotes(spell: Spell, lines: string[]): string[] {
+  return [...new Set(spell.usedWordIds)].flatMap((id) => {
+    const f = FIZZLE[id];
+    if (!f || lines.some((l) => f.marks.some((m) => l.includes(m)))) return [];
+    return [f.line];
+  });
 }
 
 function unownedNotes(spell: Spell): string[] {

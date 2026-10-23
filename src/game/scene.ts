@@ -123,6 +123,8 @@ export interface FightResult {
   defeated: boolean;
   // 眠らせてやり過ごした
   slept: boolean;
+  // 灰で姿と匂いを消してやり過ごした
+  hid: boolean;
   damage: number;
   usedWall: boolean;
   discoveries: string[];
@@ -167,7 +169,7 @@ function flashLines(spell: Spell): string[] {
 /** 1回の詠唱で「倒す」と「守る」を同時に判定する */
 export function fight(spell: Spell, opts: FightOptions): FightResult {
   const { enemy, intent } = opts;
-  const r: FightResult = { log: [], hearts: 0, defeated: false, slept: false, damage: 0, usedWall: false, discoveries: [], gainWords: [] };
+  const r: FightResult = { log: [], hearts: 0, defeated: false, slept: false, hid: false, damage: 0, usedWall: false, discoveries: [], gainWords: [] };
   const mult = spellMultiplier(spell);
   const shield = intent.element;
   const aimed = aimsAt(spell, enemy);
@@ -264,6 +266,17 @@ export function fight(spell: Spell, opts: FightOptions): FightResult {
       return r;
     }
     r.log.push(`${enemy.name}は眠りかけたが、攻撃の痛みで目を覚ました。`);
+  }
+
+  // 灰は、攻撃せずにまいたときだけ姿と匂いを隠してくれる
+  if (spell.tricks.includes('ash')) {
+    if (r.damage === 0) {
+      r.hid = true;
+      r.log.push(`${FLASH}灰がふわりと舞い上がり、姿も匂いも覆い隠した。`, `${enemy.name}がこちらを見失っているすきに、そっと離れた。`);
+      r.discoveries.push('灰：攻撃せずにまくと、姿と匂いを消して戦わずに抜けられる');
+      return r;
+    }
+    r.log.push('灰が舞い上がったが、呪文の勢いで吹き散らされてしまった。');
   }
 
   // 倒せなかったら反撃を受ける

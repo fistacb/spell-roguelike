@@ -78,6 +78,10 @@ export const slime: SceneDef = {
       o.summary = 'スライムを眠らせて通り抜けた';
       return outcome(o);
     }
+    if (r.hid) {
+      o.summary = '灰にまぎれてスライムから逃れた';
+      return outcome(o);
+    }
     o.summary = r.defeated ? 'スライムを追い払った' : 'スライムに泥だらけにされた';
     if (!r.defeated) o.log.push('スライムが沼に沈んだすきに、なんとか向こう岸へ渡った。');
     else {

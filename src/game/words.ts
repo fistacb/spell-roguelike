@@ -131,6 +131,19 @@ export const WORDS: Word[] = [
   { id: 'pack', text: '荷物', kind: 'target', target: 'pack', aliases: ['荷'] },
 ];
 
+// 空振りの一言：唱えた言葉が場面で何も起こさなかったとき、使いどころをほのめかす
+// marks のどれかが場面の結果（文や発見メモ）に出ていれば、効いたとみなす
+export const FIZZLE: Record<string, { marks: string[]; line: string }> = {
+  smoke: { marks: ['煙'], line: '煙がもくもくと上がったが、だれもこちらを見ていなかった。' },
+  frost: { marks: ['霜'], line: '足もとに霜が降りたが、こちらへ走ってくるものはいない。' },
+  ash: { marks: ['灰'], line: '灰が舞ったが、ここには覆う火も、隠す足跡もない。' },
+  quiet: { marks: ['静'], line: 'あたりがしんとした。でも、起こしたくない相手はここにいない。' },
+  sleep: { marks: ['眠', '寝', 'まぶた'], line: '眠りの響きがただよったが、まぶたの重くなる相手はいなかった。' },
+  echo: { marks: ['響', '山びこ', 'こだま'], line: '声がこだましたが、届く相手はいなかった。' },
+  flow: { marks: ['流'], line: '水が足もとを流れていったが、押し流すものはなかった。' },
+  pull: { marks: ['引き寄', '引っぱ', '手もと', '目の前'], line: '何かを引き寄せようとしたが、手に触れたのは風だけだった。' },
+};
+
 // 旅の始めに持っているワード。対象語は場面が提供するので所持に含めない
 // 残りの言葉は、場面の結果や出来事で手に入れる
 export const STARTING_WORDS = ['fire', 'ice', 'thunder', 'spear', 'wall'];
