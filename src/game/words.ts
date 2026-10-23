@@ -13,7 +13,15 @@ export type TargetId =
   | 'crow' | 'scarecrow' | 'field' | 'river' | 'boat' | 'boatman' | 'fog' | 'lantern' | 'owl' | 'boulder'
   | 'snow' | 'golem' | 'spring' | 'child' | 'oldbridge' | 'torrent' | 'frog' | 'pond' | 'lily'
   | 'mushroom' | 'cage' | 'poacher' | 'fairy' | 'kit' | 'pit' | 'vixen' | 'bandit' | 'cart'
-  | 'merchant' | 'donkey' | 'pack';
+  | 'merchant' | 'donkey' | 'pack'
+  | 'mill' | 'channel' | 'miller' | 'goat' | 'rope' | 'imps' | 'henhouse' | 'torch'
+  | 'mire' | 'carriage' | 'horse' | 'guard' | 'gate' | 'tower' | 'roof' | 'bell' | 'stage' | 'juggler' | 'crowd'
+  | 'warden' | 'shrine' | 'offering' | 'web' | 'spider' | 'trees' | 'wisp' | 'signpost'
+  | 'hearth' | 'door' | 'blizzard' | 'traveler' | 'root' | 'cliff' | 'catfish' | 'riverbed' | 'sluice' | 'paddy' | 'farmer'
+  | 'bees' | 'hivebox' | 'straw' | 'steel' | 'tub' | 'furnace' | 'icefall' | 'crack' | 'icicle' | 'yeti' | 'campfire' | 'cave'
+  | 'rubble' | 'beam' | 'miner' | 'net' | 'otter' | 'fisher' | 'kappa' | 'dish' | 'cucumber' | 'reservoir' | 'cloud' | 'drum'
+  | 'snare' | 'fawn' | 'hunter' | 'thorn' | 'birds' | 'oldtree' | 'serpent' | 'sunspot' | 'bush'
+  | 'mark' | 'prize' | 'keeper' | 'charcoal' | 'brazier' | 'guests' | 'thief' | 'purse' | 'throng';
 
 // hint：カードをタップしたときの、効果をはっきり言わない一言
 // flash：混ざった言葉などが効いたときの演出
@@ -129,6 +137,86 @@ export const WORDS: Word[] = [
   { id: 'merchant', text: '行商人', kind: 'target', target: 'merchant', aliases: ['商人'] },
   { id: 'donkey', text: 'ロバ', kind: 'target', target: 'donkey', aliases: ['驢馬'] },
   { id: 'pack', text: '荷物', kind: 'target', target: 'pack', aliases: ['荷'] },
+  { id: 'mill', text: '水車', kind: 'target', target: 'mill', aliases: ['羽根'] },
+  { id: 'channel', text: '水路', kind: 'target', target: 'channel' },
+  { id: 'miller', text: '粉屋', kind: 'target', target: 'miller' },
+  { id: 'goat', text: '子ヤギ', kind: 'target', target: 'goat', aliases: ['ヤギ', '山羊'] },
+  { id: 'rope', text: '縄', kind: 'target', target: 'rope', aliases: ['ロープ'] },
+  { id: 'imps', text: '小鬼たち', kind: 'target', target: 'imps', aliases: ['仲間'] },
+  { id: 'henhouse', text: '鶏小屋', kind: 'target', target: 'henhouse', aliases: ['鶏', 'ニワトリ'] },
+  { id: 'torch', text: '松明', kind: 'target', target: 'torch', aliases: ['たいまつ'] },
+  { id: 'mire', text: 'ぬかるみ', kind: 'target', target: 'mire', aliases: ['泥道'] },
+  { id: 'carriage', text: '馬車', kind: 'target', target: 'carriage', aliases: ['車輪'] },
+  { id: 'horse', text: '馬', kind: 'target', target: 'horse' },
+  { id: 'guard', text: '番兵', kind: 'target', target: 'guard', aliases: ['兵士'] },
+  { id: 'gate', text: '門', kind: 'target', target: 'gate', aliases: ['関所'] },
+  { id: 'tower', text: '塔', kind: 'target', target: 'tower' },
+  { id: 'roof', text: '屋根', kind: 'target', target: 'roof' },
+  { id: 'bell', text: '鐘', kind: 'target', target: 'bell' },
+  { id: 'stage', text: '舞台', kind: 'target', target: 'stage', aliases: ['空'] },
+  { id: 'juggler', text: '芸人', kind: 'target', target: 'juggler', aliases: ['座長'] },
+  { id: 'crowd', text: '見物人', kind: 'target', target: 'crowd', aliases: ['観客'] },
+  { id: 'warden', text: '番人', kind: 'target', target: 'warden', aliases: ['石像'] },
+  { id: 'shrine', text: '祠', kind: 'target', target: 'shrine', aliases: ['灯明'] },
+  { id: 'offering', text: '供え物', kind: 'target', target: 'offering', aliases: ['供え物台'] },
+  { id: 'web', text: '蜘蛛の巣', kind: 'target', target: 'web', aliases: ['糸'] },
+  { id: 'spider', text: '蜘蛛', kind: 'target', target: 'spider', aliases: ['大蜘蛛'] },
+  { id: 'trees', text: '木々', kind: 'target', target: 'trees', aliases: ['枝'] },
+  { id: 'wisp', text: '鬼火', kind: 'target', target: 'wisp' },
+  { id: 'signpost', text: '道しるべ', kind: 'target', target: 'signpost', aliases: ['看板'] },
+  { id: 'hearth', text: '暖炉', kind: 'target', target: 'hearth', aliases: ['薪'] },
+  { id: 'door', text: '戸口', kind: 'target', target: 'door', aliases: ['戸', '入り口'] },
+  { id: 'blizzard', text: '吹雪', kind: 'target', target: 'blizzard' },
+  { id: 'traveler', text: '旅人', kind: 'target', target: 'traveler' },
+  { id: 'root', text: '木の根', kind: 'target', target: 'root', aliases: ['根'] },
+  { id: 'cliff', text: '崖', kind: 'target', target: 'cliff', aliases: ['岩壁'] },
+  { id: 'catfish', text: 'ナマズ', kind: 'target', target: 'catfish', aliases: ['大ナマズ', '鯰', '主'] },
+  { id: 'riverbed', text: '岸', kind: 'target', target: 'riverbed', aliases: ['岸辺'] },
+  { id: 'sluice', text: '水門', kind: 'target', target: 'sluice' },
+  { id: 'paddy', text: '田んぼ', kind: 'target', target: 'paddy', aliases: ['稲', '田'] },
+  { id: 'farmer', text: '農夫', kind: 'target', target: 'farmer' },
+  { id: 'bees', text: '蜂たち', kind: 'target', target: 'bees', aliases: ['ミツバチ', '蜂'] },
+  { id: 'hivebox', text: '巣箱', kind: 'target', target: 'hivebox' },
+  { id: 'straw', text: 'わら', kind: 'target', target: 'straw', aliases: ['藁', '濡れたわら'] },
+  { id: 'steel', text: '鋼', kind: 'target', target: 'steel', aliases: ['焼けた鋼', '刀'] },
+  { id: 'tub', text: '水桶', kind: 'target', target: 'tub', aliases: ['桶'] },
+  { id: 'furnace', text: '炉', kind: 'target', target: 'furnace', aliases: ['ふいご'] },
+  { id: 'icefall', text: '滝', kind: 'target', target: 'icefall', aliases: ['氷瀑', '凍った滝'] },
+  { id: 'crack', text: 'ひび', kind: 'target', target: 'crack', aliases: ['割れ目'] },
+  { id: 'icicle', text: 'つらら', kind: 'target', target: 'icicle', aliases: ['氷柱'] },
+  { id: 'yeti', text: '雪男', kind: 'target', target: 'yeti' },
+  { id: 'campfire', text: '焚き火', kind: 'target', target: 'campfire', aliases: ['焚火'] },
+  { id: 'cave', text: '洞穴', kind: 'target', target: 'cave', aliases: ['ほら穴', 'ねぐら'] },
+  { id: 'rubble', text: '瓦礫', kind: 'target', target: 'rubble' },
+  { id: 'beam', text: '坑木', kind: 'target', target: 'beam', aliases: ['柱', '天井'] },
+  { id: 'miner', text: '坑夫', kind: 'target', target: 'miner', aliases: ['鉱夫'] },
+  { id: 'net', text: '網', kind: 'target', target: 'net', aliases: ['漁網'] },
+  { id: 'otter', text: 'カワウソ', kind: 'target', target: 'otter', aliases: ['かわうそ'] },
+  { id: 'fisher', text: '漁師', kind: 'target', target: 'fisher' },
+  { id: 'kappa', text: '河童', kind: 'target', target: 'kappa', aliases: ['かっぱ', 'カッパ'] },
+  { id: 'dish', text: '皿', kind: 'target', target: 'dish', aliases: ['頭の皿'] },
+  { id: 'cucumber', text: 'きゅうり', kind: 'target', target: 'cucumber', aliases: ['キュウリ', '胡瓜'] },
+  { id: 'reservoir', text: '溜め池', kind: 'target', target: 'reservoir', aliases: ['ため池'] },
+  { id: 'cloud', text: '雲', kind: 'target', target: 'cloud', aliases: ['雨雲'] },
+  { id: 'drum', text: '太鼓', kind: 'target', target: 'drum' },
+  { id: 'snare', text: '罠', kind: 'target', target: 'snare', aliases: ['くくり罠'] },
+  { id: 'fawn', text: '子鹿', kind: 'target', target: 'fawn', aliases: ['鹿'] },
+  { id: 'hunter', text: '狩人', kind: 'target', target: 'hunter', aliases: ['猟師'] },
+  { id: 'thorn', text: '茨', kind: 'target', target: 'thorn', aliases: ['いばら', 'とげ'] },
+  { id: 'birds', text: '小鳥', kind: 'target', target: 'birds', aliases: ['鳥'] },
+  { id: 'oldtree', text: '古木', kind: 'target', target: 'oldtree' },
+  { id: 'serpent', text: '大蛇', kind: 'target', target: 'serpent', aliases: ['蛇', 'ヘビ'] },
+  { id: 'sunspot', text: '日だまり', kind: 'target', target: 'sunspot', aliases: ['日なた'] },
+  { id: 'bush', text: '草むら', kind: 'target', target: 'bush', aliases: ['茂み'] },
+  { id: 'mark', text: '的', kind: 'target', target: 'mark', aliases: ['的当て'] },
+  { id: 'prize', text: '景品', kind: 'target', target: 'prize' },
+  { id: 'keeper', text: '店主', kind: 'target', target: 'keeper', aliases: ['親父'] },
+  { id: 'charcoal', text: '炭', kind: 'target', target: 'charcoal' },
+  { id: 'brazier', text: '火鉢', kind: 'target', target: 'brazier' },
+  { id: 'guests', text: '客', kind: 'target', target: 'guests', aliases: ['旅の客', '客たち'] },
+  { id: 'thief', text: 'スリ', kind: 'target', target: 'thief', aliases: ['泥棒'] },
+  { id: 'purse', text: '財布', kind: 'target', target: 'purse', aliases: ['巾着'] },
+  { id: 'throng', text: '人ごみ', kind: 'target', target: 'throng', aliases: ['人混み'] },
 ];
 
 // 空振りの一言：唱えた言葉が場面で何も起こさなかったとき、使いどころをほのめかす

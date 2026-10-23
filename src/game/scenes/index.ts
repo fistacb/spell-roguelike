@@ -8,18 +8,49 @@ import { flood } from './flood';
 import { fog } from './fog';
 import { fox } from './fox';
 import { frogs } from './frogs';
+import { goatwell } from './goatwell';
 import { golem } from './golem';
 import { imp } from './imp';
 import { merchant } from './merchant';
 import { mushroom } from './mushroom';
+import { nightwatch } from './nightwatch';
+import { mudcart } from './mudcart';
+import { checkpoint } from './checkpoint';
+import { temple } from './temple';
+import { performers } from './performers';
+import { shrine } from './shrine';
+import { spiderweb } from './spiderweb';
+import { wisp } from './wisp';
+import { blizzard } from './blizzard';
+import { cliff } from './cliff';
+import { catfish } from './catfish';
+import { sluice } from './sluice';
+import { bees } from './bees';
+import { smithy } from './smithy';
+import { icefall } from './icefall';
+import { yeti } from './yeti';
+import { mine } from './mine';
+import { otter } from './otter';
+import { kappa } from './kappa';
+import { reservoir } from './reservoir';
+import { snare } from './snare';
+import { thorns } from './thorns';
+import { serpent } from './serpent';
+import { targetstall } from './targetstall';
+import { teahouse } from './teahouse';
+import { pickpocket } from './pickpocket';
 import { REGIONS, type RegionId } from './regions';
 import { rockfall } from './rockfall';
 import { slime } from './slime';
 import { valley } from './valley';
+import { watermill } from './watermill';
 import { wolves } from './wolves';
 
 export const SCENES: Record<string, SceneDef> = Object.fromEntries(
-  [rockfall, imp, wolves, barn, bear, slime, crows, ferry, fog, valley, golem, flood, frogs, mushroom, fox, bandits, merchant].map((s) => [s.id, s]),
+  [rockfall, imp, wolves, barn, bear, slime, crows, ferry, fog, valley, golem, flood, frogs, mushroom, fox, bandits, merchant,
+    watermill, goatwell, nightwatch, mudcart, checkpoint, temple, performers, shrine, spiderweb, wisp,
+    blizzard, cliff, catfish, sluice,
+    bees, smithy, icefall, yeti, mine, otter, kappa, reservoir, snare, thorns, serpent, targetstall, teahouse, pickpocket].map((s) => [s.id, s]),
 );
 
 export const STAGE_COUNT = 3;
