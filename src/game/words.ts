@@ -8,7 +8,8 @@ export type Trick = 'smoke' | 'frost';
 export type TargetId =
   | 'rock' | 'girl' | 'tree' | 'stream' | 'imp' | 'self' | 'enemy'
   | 'wolf' | 'bridge' | 'barn' | 'villager' | 'well'
-  | 'bear' | 'hive' | 'slime' | 'swamp' | 'grass';
+  | 'bear' | 'hive' | 'slime' | 'swamp' | 'grass'
+  | 'crow' | 'scarecrow' | 'field' | 'river' | 'boat' | 'boatman' | 'fog' | 'lantern' | 'owl' | 'boulder';
 
 export type Word =
   | { id: string; text: string; kind: 'element'; element: Element }
@@ -55,6 +56,16 @@ export const WORDS: Word[] = [
   { id: 'slime', text: 'スライム', kind: 'target', target: 'slime' },
   { id: 'swamp', text: '沼', kind: 'target', target: 'swamp' },
   { id: 'grass', text: '草', kind: 'target', target: 'grass', aliases: ['枯れ草'] },
+  { id: 'crow', text: 'カラス', kind: 'target', target: 'crow', aliases: ['烏', 'からす'] },
+  { id: 'scarecrow', text: 'かかし', kind: 'target', target: 'scarecrow', aliases: ['案山子', 'カカシ'] },
+  { id: 'field', text: '麦畑', kind: 'target', target: 'field', aliases: ['畑', '麦'] },
+  { id: 'river', text: '大川', kind: 'target', target: 'river' },
+  { id: 'boat', text: '渡し舟', kind: 'target', target: 'boat', aliases: ['舟', '船'] },
+  { id: 'boatman', text: '船頭', kind: 'target', target: 'boatman', aliases: ['船頭さん'] },
+  { id: 'fog', text: '霧', kind: 'target', target: 'fog' },
+  { id: 'lantern', text: 'ランタン', kind: 'target', target: 'lantern', aliases: ['灯り'] },
+  { id: 'owl', text: 'フクロウ', kind: 'target', target: 'owl', aliases: ['ふくろう', '梟'] },
+  { id: 'boulder', text: '大岩', kind: 'target', target: 'boulder' },
 ];
 
 // 旅の始めに持っているワード。対象語は場面が提供するので所持に含めない

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseSpell } from '../src/game/parse';
 import type { Flags, Outcome } from '../src/game/scene';
 import { SCENES } from '../src/game/scenes';
+import { makeCrossroads } from '../src/game/scenes/crossroads';
 import { WORDS } from '../src/game/words';
 
 // 場面のしかけを確かめるため、すべての言葉を持っていることにする
@@ -189,5 +190,79 @@ describe('出来事ワードとお礼の言葉', () => {
   });
   it('煙にまぎれて眠る熊の横を通れる', () => {
     expect(play('bear', '煙').hearts).toBe(0);
+  });
+});
+
+describe('畑のカラス', () => {
+  it('雨は群れによく効き、お礼でハート+1', () => {
+    expect(play('crows', '炎雨').summary).toBe('カラスの群れを追い払った');
+    expect(play('crows', '炎雨').hearts).toBe(1);
+  });
+  it('かかしを強化するか雷を落とすと追い払える', () => {
+    expect(play('crows', 'かかしに強化').summary).toBe('かかしを動かしてカラスを追い払った');
+    expect(play('crows', 'かかしに雷').hearts).toBe(1);
+  });
+  it('麦畑を燃やすと後悔と煙', () => {
+    const o = play('crows', '畑に炎');
+    expect(o.gainRegret).toBe(true);
+    expect(o.gainWords).toContain('smoke');
+  });
+});
+
+describe('大川の渡し場', () => {
+  it('凍らせると歩いて渡れて霜が手に入る', () => {
+    const o = play('ferry', '大川に氷');
+    expect(o.hearts).toBe(0);
+    expect(o.gainWords).toContain('frost');
+  });
+  it('船頭を癒すと舟に乗せてもらえて雨の言葉', () => {
+    const o = play('ferry', '船頭に癒し');
+    expect(o.hearts).toBe(1);
+    expect(o.reward).toBe('rain');
+  });
+  it('鎖で舟をたぐり寄せる、土の壁で橋をかける', () => {
+    expect(play('ferry', '舟に鎖').hearts).toBe(0);
+    expect(play('ferry', '大川に土壁').hearts).toBe(0);
+  });
+  it('何もできないと泳いでハート-1', () => {
+    expect(play('ferry', '大川に槍').hearts).toBe(-1);
+  });
+});
+
+describe('霧の森', () => {
+  it('ランタンを灯すと抜けられて風の言葉', () => {
+    const o = play('fog', 'ランタンに炎');
+    expect(o.hearts).toBe(0);
+    expect(o.reward).toBe('wind');
+  });
+  it('風で霧を払う、フクロウを癒す', () => {
+    expect(play('fog', '霧に風').reward).toBe('wind');
+    expect(play('fog', 'フクロウに癒し').reward).toBe('wind');
+  });
+  it('迷うとハート-1', () => {
+    expect(play('fog', '霧に氷').hearts).toBe(-1);
+  });
+});
+
+describe('分かれ道', () => {
+  const cross = makeCrossroads(['mountain', 'river', 'forest']);
+  const route = (input: string) => {
+    const r = cross.resolve(parseSpell(input, owned), { flags: {}, warned: false, intent: null, rng: () => 0 });
+    if (r.kind !== 'outcome') throw new Error('warning');
+    return r.outcome.route;
+  };
+  it('ふさいでいる物に効く言葉で道が開く', () => {
+    expect(route('大岩に槍')).toBe('mountain');
+    expect(route('大岩に礫')).toBe('mountain');
+    expect(route('大川に霜')).toBe('river');
+    expect(route('霧に風')).toBe('forest');
+  });
+  it('効かなければ街道', () => {
+    expect(route('大岩に氷')).toBe('road');
+    expect(route('壁')).toBe('road');
+  });
+  it('並んでいない道は開かない', () => {
+    const r = makeCrossroads(['forest']).resolve(parseSpell('大岩に槍', owned), { flags: {}, warned: false, intent: null, rng: () => 0 });
+    expect(r.kind === 'outcome' && r.outcome.route).toBe('road');
   });
 });

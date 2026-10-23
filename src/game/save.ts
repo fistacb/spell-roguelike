@@ -18,6 +18,8 @@ export interface SaveData {
 }
 
 const KEY = 'spell-roguelike:v1';
+// 宿で記録した、途中の旅
+const JOURNEY_KEY = 'spell-roguelike:journey:v1';
 
 export function emptySave(): SaveData {
   return { version: 1, runs: [], discoveries: [], world: {} };
@@ -49,6 +51,35 @@ export function addRun(data: SaveData, record: RunRecord): SaveData {
     runs: [...data.runs, record],
     discoveries: [...data.discoveries, ...record.discoveries.filter((d) => !data.discoveries.includes(d))],
   };
+}
+
+// 途中の旅は宿に着いたときに保存し、タイトルから続きを遊べるようにする
+export function loadJourney<T extends { phase: string }>(storage: Storage | undefined = safeStorage()): T | null {
+  try {
+    const raw = storage?.getItem(JOURNEY_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as { version: number; run: T };
+    if (data.version !== 1 || data.run?.phase !== 'fork') return null;
+    return data.run;
+  } catch {
+    return null;
+  }
+}
+
+export function writeJourney(run: unknown, storage: Storage | undefined = safeStorage()): void {
+  try {
+    storage?.setItem(JOURNEY_KEY, JSON.stringify({ version: 1, run }));
+  } catch {
+    // 保存できない環境では何もしない
+  }
+}
+
+export function clearJourney(storage: Storage | undefined = safeStorage()): void {
+  try {
+    storage?.removeItem(JOURNEY_KEY);
+  } catch {
+    // 何もしない
+  }
 }
 
 function safeStorage(): Storage | undefined {

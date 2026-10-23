@@ -1,16 +1,25 @@
 import type { Rng, SceneDef } from '../scene';
 import { barn } from './barn';
 import { bear } from './bear';
+import { crows } from './crows';
+import { ferry } from './ferry';
+import { fog } from './fog';
 import { imp } from './imp';
+import { REGIONS, type RegionId } from './regions';
 import { rockfall } from './rockfall';
 import { slime } from './slime';
 import { wolves } from './wolves';
 
 export const SCENES: Record<string, SceneDef> = Object.fromEntries(
-  [rockfall, imp, wolves, barn, bear, slime].map((s) => [s.id, s]),
+  [rockfall, imp, wolves, barn, bear, slime, crows, ferry, fog].map((s) => [s.id, s]),
 );
 
-export const JOURNEY_LENGTH = 5;
+export const STAGE_COUNT = 3;
+// 場面の候補が増えるまでは1ステージ3場面にしておく（目標は5場面）
+export const STAGE_LENGTH = 3;
+
+// 続けて起きる1組。最初のステージで必ず起きる
+const OPENING = ['rockfall', 'imp'];
 
 function shuffle<T>(items: T[], rng: Rng): T[] {
   const a = [...items];
@@ -22,12 +31,17 @@ function shuffle<T>(items: T[], rng: Rng): T[] {
 }
 
 /**
- * 1回の旅の場面を決める。
- * 「女の子と落石」と「いたずら小鬼」は続けて起きる1組として必ず入り、
- * 残りは他の候補からランダムに選んで、順番もランダムにする。
+ * 1つのステージの場面を決める。
+ * その地域の場面を優先し、足りない分はまだ起きていない他の場面から選ぶ。
+ * 故郷では「女の子と落石」→「いたずら小鬼」の1組が必ず入る。
  */
-export function buildJourney(rng: Rng): string[] {
-  const others = shuffle(['wolves', 'barn', 'bear', 'slime'], rng).slice(0, JOURNEY_LENGTH - 2);
-  const units: string[][] = shuffle([['rockfall', 'imp'], ...others.map((id) => [id])], rng);
-  return units.flat();
+export function buildStage(region: RegionId, used: string[], rng: Rng): string[] {
+  const free = (id: string) => !used.includes(id) && !OPENING.includes(id);
+  const local = shuffle(REGIONS[region].scenes.filter(free), rng);
+  const others = shuffle(Object.keys(SCENES).filter((id) => free(id) && !local.includes(id)), rng);
+  if (region === 'home') {
+    const rest = [...local, ...others].slice(0, STAGE_LENGTH - OPENING.length);
+    return shuffle([OPENING, ...rest.map((id) => [id])], rng).flat();
+  }
+  return [...local, ...others].slice(0, STAGE_LENGTH);
 }
