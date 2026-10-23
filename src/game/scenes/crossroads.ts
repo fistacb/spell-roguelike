@@ -28,12 +28,12 @@ const ROADS: Road[] = [
   },
   {
     region: 'river',
-    object: { id: 'river', label: '🌊 川沿いの道を流す大川', keyword: '大川', desc: '冷たい水がゆったり流れている。足場か、流れの切れ目があれば渡れそう。向こう岸に渡し場の小屋が見える。', color: '#bfe0f0' },
+    object: { id: 'river', label: '🌊 行く手をはばむ激流', keyword: '激流', desc: '冷たい水が勢いよく流れている。足場か、流れの切れ目があれば渡れそう。向こう岸に渡し場の小屋が見える。', color: '#bfe0f0' },
     opens: (s) => s.elements.includes('ice') || s.tricks.includes('frost') || s.supports.includes('flow') || s.supports.includes('pull')
       || (s.elements.includes('earth') && s.shapes.includes('wall')),
-    openLine: '大川に渡れる足場ができ、川沿いの道へ進めるようになった。',
-    discovery: '氷・霜・流れ・引き寄せ・土の壁×大川：足場ができて渡れる',
-    miss: (s) => s.elements.includes('fire') ? '大川から湯気が上がったが、流れは変わらない。' : '呪文は大川の流れに飲みこまれた。足場になるものがほしい。',
+    openLine: '激流に渡れる足場ができ、川沿いの道へ進めるようになった。',
+    discovery: '氷・霜・流れ・引き寄せ・土の壁×激流：足場ができて渡れる',
+    miss: (s) => s.elements.includes('fire') ? '激流から湯気が上がったが、流れは変わらない。' : '呪文は激流に飲みこまれた。足場になるものがほしい。',
   },
   {
     region: 'forest',
@@ -60,8 +60,10 @@ export function makeCrossroads(options: RegionId[]): SceneDef {
       'ふさがれていない街道もある。',
     ],
     objects: () => roads.map((r) => r.object),
-    resolve(spell) {
+    resolve(said) {
       const o = emptyOutcome();
+      // ここに小川はないので、「川」「水」は激流のこと
+      const spell = said.target === 'stream' ? { ...said, target: 'river' as TargetId } : said;
       // 対象を言わなかったときは、呪文が効く道に向かう
       const road = roads.find((r) => (spell.target === null || spell.target === (r.object.id as TargetId)) && r.opens(spell));
       if (road) {

@@ -209,9 +209,9 @@ describe('畑のカラス', () => {
   });
 });
 
-describe('大川の渡し場', () => {
+describe('激流の渡し場', () => {
   it('凍らせると歩いて渡れて霜が手に入る', () => {
-    const o = play('ferry', '大川に氷');
+    const o = play('ferry', '激流に氷');
     expect(o.hearts).toBe(0);
     expect(o.gainWords).toContain('frost');
   });
@@ -225,7 +225,7 @@ describe('大川の渡し場', () => {
     expect(play('ferry', '大川に土壁').hearts).toBe(0);
   });
   it('何もできないと泳いでハート-1', () => {
-    expect(play('ferry', '大川に槍').hearts).toBe(-1);
+    expect(play('ferry', '川に槍').hearts).toBe(-1);
   });
 });
 
@@ -254,7 +254,7 @@ describe('分かれ道', () => {
   it('ふさいでいる物に効く言葉で道が開く', () => {
     expect(route('大岩に槍')).toBe('mountain');
     expect(route('大岩に礫')).toBe('mountain');
-    expect(route('大川に霜')).toBe('river');
+    expect(route('激流に霜')).toBe('river');
     expect(route('霧に風')).toBe('forest');
   });
   it('効かなければ街道', () => {
@@ -414,12 +414,18 @@ describe('分かれ道の手がかり', () => {
     expect(o.log).toContain('霧の中で稲光がまたたいたが、霧はじっと動かない。');
   });
   it('効きそうな言葉は、ほかにも効く', () => {
-    expect(castAt('大川に流れ').route).toBe('river');
+    expect(castAt('水に流れ').route).toBe('river');
     expect(castAt('霧に流れ').route).toBe('forest');
     expect(castAt('霧に嵐').route).toBe('forest');
     expect(castAt('大川に土壁').route).toBe('river');
     expect(castAt('大岩に引き寄せ').route).toBe('mountain');
     expect(castAt('大岩に雷').route).toBe('mountain');
+  });
+  it('激流は「川」「水」「大川」でもねらえる', () => {
+    expect(castAt('川に氷').route).toBe('river');
+    expect(castAt('水に霜').route).toBe('river');
+    expect(castAt('大川に氷').route).toBe('river');
+    expect(play('ferry', '水に氷').summary).toBe('激流を凍らせて歩いて渡った');
   });
   it('ねらわなかった物は反応しない', () => {
     expect(castAt('霧に雷').log.some((l) => l.includes('大岩'))).toBe(false);
