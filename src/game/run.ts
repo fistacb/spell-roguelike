@@ -1,7 +1,7 @@
 // 1回の旅（ラン）の進行：3つのステージを進む。ステージの終わりには宿と分かれ道があり、最後に旅の記録
 
-import { isAttack, parseSpell, type Spell } from './parse';
-import { pick, type Flags, type Intent, type Rng, type SceneDef } from './scene';
+import { buildSpell, isAttack, parseSpell, type Spell } from './parse';
+import { pick, type Flags, type Intent, type Rng, type SceneDef, type SceneResult } from './scene';
 import { buildStage, SCENES, STAGE_COUNT } from './scenes';
 import { makeCrossroads } from './scenes/crossroads';
 import { OPENABLE_REGIONS, REGIONS, type RegionId } from './scenes/regions';
@@ -57,6 +57,8 @@ export interface RunState {
 export interface CastResult {
   run: RunState;
   spell: Spell | null;
+  // 結果に効いた言葉（カードを光らせる）。効かなかった言葉は入らない
+  effective?: string[];
   warning?: string;
   error?: string;
 }
@@ -152,13 +154,18 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   }
 
   const scene = currentScene(run);
-  // 出来事の場面では、後悔と覚悟は「強化」のように働く。攻撃を攻撃でなくしてしまわないよう、攻撃には足さない
-  const strong = scene.kind === 'event' && (spell.regret || spell.resolve) && !spell.supports.includes('boost') && !isAttack(spell);
-  const result = scene.resolve(strong ? { ...spell, supports: [...spell.supports, 'boost'] } : spell, { flags: run.flags, warned: run.warned, intent: run.intent, rng });
+  const strong = isStrong(scene, spell);
+  const draws: number[] = [];
+  const result = resolveIn(run, scene, spell, () => {
+    const v = rng();
+    draws.push(v);
+    return v;
+  });
   if (result.kind === 'warning') {
     return { run: { ...run, warned: true }, spell, warning: result.message };
   }
   const o = result.outcome;
+  const effective = effectiveWords(run, scene, spell, result, draws);
 
   // 黒の言葉を持ったまま悪いことを重ねると禁忌がつく
   let owned = run.owned;
@@ -169,7 +176,7 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   if (strong) {
     log.push(spell.regret ? '「後悔」にすがると、呪文がぐっと重く、強くなった。' : '「覚悟」が呪文を静かに後押しした。');
   }
-  log.push(...o.log, ...fizzleNotes(spell, [...o.log, ...o.discoveries]));
+  log.push(...o.log, ...ineffectiveNotes(spell, effective));
   if (scene.kind === 'event' && spell.regret) {
     heartGain -= 1;
     log.push('「後悔」が胸を締めつける。ハートを1つ失った。');
@@ -235,10 +242,10 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   };
 
   if (taboos.length >= TABOO_LIMIT) {
-    return { spell, run: { ...next, phase: 'record', result: 'demon', log: [...log, '胸の奥の黒いものが、すべてを飲みこんだ。'] } };
+    return { spell, effective, run: { ...next, phase: 'record', result: 'demon', log: [...log, '胸の奥の黒いものが、すべてを飲みこんだ。'] } };
   }
   if (hearts <= 0) {
-    return { spell, run: { ...next, phase: 'record', result: 'tired', log: [...log, 'ハートがなくなった。'] } };
+    return { spell, effective, run: { ...next, phase: 'record', result: 'tired', log: [...log, 'ハートがなくなった。'] } };
   }
 
   // 分かれ道を抜けたら、次のステージへ
@@ -246,14 +253,14 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
     const region = (o.route ?? 'road') as RegionId;
     const charLimit = Math.min(MAX_CHAR_LIMIT, run.charLimit + CHAR_LIMIT_PER_STAGE);
     log.push(`詠唱できる文字数が${charLimit}文字に増えた。`);
-    return { spell, run: enterStage({ ...next, stage: run.stage + 1, charLimit }, region, rng) };
+    return { spell, effective, run: enterStage({ ...next, stage: run.stage + 1, charLimit }, region, rng) };
   }
 
   if (run.index + 1 < run.sceneIds.length) {
-    return { spell, run: enter({ ...next, index: run.index + 1 }, rng) };
+    return { spell, effective, run: enter({ ...next, index: run.index + 1 }, rng) };
   }
   if (run.stage + 1 >= STAGE_COUNT) {
-    return { spell, run: { ...next, phase: 'record', result: 'complete' } };
+    return { spell, effective, run: { ...next, phase: 'record', result: 'complete' } };
   }
 
   // ステージの終わり：宿に泊まってから分かれ道へ
@@ -261,7 +268,7 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   log.push('◆ 宿屋', `${regionName(run)}を抜けて、宿に泊まった。`,
     rested > hearts ? `ぐっすり眠って、ハートが${rested - hearts}つ回復した。` : 'ぐっすり眠った。');
   log.push('（ここまでの旅を記録した）');
-  return { spell, run: enterFork({ ...next, hearts: rested }) };
+  return { spell, effective, run: enterFork({ ...next, hearts: rested }) };
 }
 
 /** 禁忌がつくたびに、ハートの上限が1つ減る */
@@ -285,12 +292,44 @@ export function forget(run: RunState, id: string): RunState {
   };
 }
 
-/** 唱えた言葉が何も起こさなかったら、空振りの一言を添える */
-function fizzleNotes(spell: Spell, lines: string[]): string[] {
-  return [...new Set(spell.usedWordIds)].flatMap((id) => {
-    const f = FIZZLE[id];
-    if (!f || lines.some((l) => f.marks.some((m) => l.includes(m)))) return [];
-    return [f.line];
+// 出来事の場面では、後悔と覚悟は「強化」のように働く。攻撃を攻撃でなくしてしまわないよう、攻撃には足さない
+function isStrong(scene: SceneDef, spell: Spell): boolean {
+  return scene.kind === 'event' && (spell.regret || spell.resolve) && !spell.supports.includes('boost') && !isAttack(spell);
+}
+
+function resolveIn(run: RunState, scene: SceneDef, spell: Spell, rng: Rng): SceneResult {
+  const s = isStrong(scene, spell) ? { ...spell, supports: [...spell.supports, 'boost' as const] } : spell;
+  return scene.resolve(s, { flags: run.flags, warned: run.warned, intent: run.intent, rng });
+}
+
+/**
+ * 言葉を1つずつ抜いて唱え直し、抜いても結果が変わらない言葉を外していく。残った言葉を「効いた」とする。
+ * どちらか一方で足りる2語（雷と槍など）は、先に唱えたほうを残す。
+ * 乱数は本番と同じ値を使い直す。後悔・覚悟と、混ざって新しい言葉を生んだ言葉は常に効いたとみなす
+ */
+function effectiveWords(run: RunState, scene: SceneDef, spell: Spell, result: SceneResult, draws: number[]): string[] {
+  const actual = JSON.stringify(result);
+  const kept = [...new Set(spell.usedWordIds)];
+  for (const id of [...kept].reverse()) {
+    const kind = wordById(id).kind;
+    if (kind === 'black' || kind === 'white') continue;
+    if (COMBOS.some((c) => c.ids.includes(id) && c.ids.every((w) => spell.usedWordIds.includes(w)))) continue;
+    const rest = kept.filter((w) => w !== id);
+    const without = buildSpell(spell.input, spell.tokens.filter((t) => t.type !== 'word' || rest.includes(t.wordId)));
+    let i = 0;
+    const replay: Rng = () => (i < draws.length ? draws[i++] : 0.5);
+    if (JSON.stringify(resolveIn(run, scene, without, replay)) === actual) kept.splice(kept.indexOf(id), 1);
+  }
+  return kept;
+}
+
+/** 結果を変えなかった言葉には、空振りの一言を添える */
+function ineffectiveNotes(spell: Spell, effective: string[]): string[] {
+  return [...new Set(spell.usedWordIds)].filter((id) => !effective.includes(id)).map((id) => {
+    const word = wordById(id);
+    if (FIZZLE[id]) return FIZZLE[id];
+    if (word.kind === 'target') return `（「${word.text}」を名指ししても、結果は変わらなかった）`;
+    return `（「${word.text}」を足しても、結果は変わらなかった）`;
   });
 }
 

@@ -180,13 +180,35 @@ describe('空振りの一言', () => {
     let run = newRun(first, stage1);
     run = { ...run, owned: [...run.owned, 'ash'] };
     run = cast(run, '岩に雷槍灰').run;
-    expect(run.log).toContain(FIZZLE.ash.line);
+    expect(run.log).toContain(FIZZLE.ash);
   });
   it('効いた言葉には出ない', () => {
     let run = newRun(first, ['slime', 'barn', 'crows', 'fog', 'fox']);
     run = { ...run, owned: [...run.owned, 'ash'] };
     run = cast(run, '灰').run;
-    expect(run.log).not.toContain(FIZZLE.ash.line);
+    expect(run.log).not.toContain(FIZZLE.ash);
+  });
+  it('結果を変えなかった言葉は、光らせる言葉に入らない', () => {
+    let run = newRun(first, stage1);
+    run = { ...run, owned: [...run.owned, 'ash'] };
+    const result = cast(run, '岩に雷槍灰');
+    expect(result.effective).not.toContain('ash');
+    expect(result.effective!.length).toBeGreaterThan(0);
+    expect(result.effective!.every((id) => result.spell!.usedWordIds.includes(id))).toBe(true);
+  });
+  it('どちらか一方で足りる2語は、先に唱えたほうが光る', () => {
+    const result = cast(newRun(first, stage1), '雷槍');
+    expect(result.effective).toEqual(['thunder']);
+    expect(result.run.log).toContain('（「槍」を足しても、結果は変わらなかった）');
+  });
+  it('一言のない言葉が効かなかったときは、結果は変わらなかったと出る', () => {
+    const run = newRun(first, stage1);
+    const result = cast(run, '岩に雷槍壁');
+    if (!result.effective!.includes('wall')) {
+      expect(result.run.log).toContain('（「壁」を足しても、結果は変わらなかった）');
+    } else {
+      expect(result.run.log).not.toContain('（「壁」を足しても、結果は変わらなかった）');
+    }
   });
 });
 
