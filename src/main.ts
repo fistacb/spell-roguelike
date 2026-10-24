@@ -144,7 +144,7 @@ function doCast(text: string) {
   // 禁忌がついたら、その場で知らせる
   if (run.phase !== 'record' && run.taboos.length > taboosBefore) showTaboos = true;
   renderGame();
-  glowCards(result.spell?.usedWordIds ?? []);
+  glowCards(result.effective ?? []);
   // 宿に着いたら、途中の旅を記録する
   if (run.phase === 'fork' && before === 'scene') writeJourney(run);
   if (run.phase === 'record') {
@@ -303,7 +303,7 @@ function renderBubble() {
 }
 
 function glowCards(ids: string[]) {
-  // 使われた順にカードを光らせる
+  // 結果に効いた言葉だけを、使われた順に光らせる
   ids.forEach((id, i) => {
     const card = document.querySelector<HTMLElement>(`.card[data-id="${id}"]`);
     if (!card) return;

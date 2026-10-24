@@ -90,7 +90,11 @@ export function parseSpell(input: string, owned: ReadonlySet<string>): Spell {
     i += 1;
   }
   flush();
+  return buildSpell(input, tokens);
+}
 
+/** 区切った言葉から呪文の中身を組み立てる（言葉を1つ抜いて試すときにも使う） */
+export function buildSpell(input: string, tokens: Token[]): Spell {
   const spell: Spell = {
     input,
     length: countLength(input),
