@@ -37,6 +37,8 @@ export type Word =
   }
   | { id: string; text: string; kind: 'trick'; trick: Trick; hint: string }
   | { id: string; text: string; kind: 'black'; black: 'regret'; hint: string }
+  // 黒い言葉を乗りこえると、白い言葉に変わる
+  | { id: string; text: string; kind: 'white'; white: 'resolve'; hint: string }
   | { id: string; text: string; kind: 'target'; target: TargetId; aliases?: string[] };
 
 export const WORDS: Word[] = [
@@ -56,7 +58,8 @@ export const WORDS: Word[] = [
   { id: 'echo', text: '響き', kind: 'support', support: 'echo', hint: '声が山に跳ね返ってくる。大きな音は、眠っているものに届く。' },
   { id: 'flow', text: '流れ', kind: 'support', support: 'flow', hint: '水は低い方へ、どこまでも。' },
   { id: 'pull', text: '引き寄せ', kind: 'support', support: 'pull', hint: '遠くのものが、手の届くところへ。' },
-  { id: 'regret', text: '後悔', kind: 'black', black: 'regret', hint: '胸の奥で、黒く重たく沈んでいる。すがれば力になるが、痛む。' },
+  { id: 'regret', text: '後悔', kind: 'black', black: 'regret', hint: '胸の奥で、黒く重たく沈んでいる。すがれば何にでも力を貸すが、そのたびに痛む。' },
+  { id: 'resolve', text: '覚悟', kind: 'white', white: 'resolve', hint: '後悔をくぐり抜けた、静かで揺るがない気持ち。' },
   // 出来事ワード：起こした出来事がそのまま言葉になる
   { id: 'smoke', text: '煙', kind: 'trick', trick: 'smoke', hint: 'もくもくと、だれの目もごまかせそうな匂い。' },
   { id: 'frost', text: '霜', kind: 'trick', trick: 'frost', hint: '足もとがひやりとする。走ってくるものは滑りそう。' },
@@ -256,6 +259,7 @@ export const ELEMENT_INFO: Record<Element, { label: string; color: string }> = {
 };
 
 export const BLACK_COLOR = '#222222';
+export const WHITE_COLOR = '#f4efe2';
 const STEAM_COLOR = '#c9d3dc';
 
 export function wordById(id: string): Word {
@@ -268,6 +272,7 @@ export function wordColor(word: Word): string {
   if (word.kind === 'element') return ELEMENT_INFO[word.element].color;
   if (word.kind === 'compound') return word.element ? ELEMENT_INFO[word.element].color : STEAM_COLOR;
   if (word.kind === 'black') return BLACK_COLOR;
+  if (word.kind === 'white') return WHITE_COLOR;
   return '#8a8a8a';
 }
 
@@ -277,5 +282,6 @@ export function wordHint(word: Word): string {
 
 // 手札の上限に数える言葉
 export function countsToHand(id: string): boolean {
-  return wordById(id).kind !== 'black';
+  const kind = wordById(id).kind;
+  return kind !== 'black' && kind !== 'white';
 }

@@ -9,6 +9,8 @@
   --glow: #ffd84a;
   --black-card: #222222;
   --black-ink: #eeeeee;
+  --white-card: #f7f2e4;
+  --white-ink: #3a3326;
   --object-ink: #2b2620;
   --scrim: rgba(0, 0, 0, 0.45);
   --on-accent: #ffffff;
@@ -113,6 +115,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   font-size: 15px;
 }
 .card.black { background: var(--black-card); color: var(--black-ink); }
+.card.white { background: var(--white-card); color: var(--white-ink); box-shadow: 0 0 6px var(--glow); }
 .card.glow { animation: glow 0.9s ease-out both; }
 @keyframes glow {
   0% { box-shadow: 0 0 0 0 var(--glow); transform: translateY(0); }
@@ -147,6 +150,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .forget { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .page ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 .taboo { color: var(--danger); }
+.taboo-mark { font-size: 13px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--danger); color: var(--danger); background: transparent; }
 
 /* 言葉カードの吹き出し */
 .card.selected { outline: 2px solid var(--accent); outline-offset: 1px; }

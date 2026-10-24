@@ -7,8 +7,8 @@ describe('言葉の使い道表', () => {
   const report = buildUsageReport();
   const word = (id: string) => report.words.find((w) => w.id === id)!;
 
-  it('対象語と黒い言葉以外のすべての言葉が並ぶ', () => {
-    const ids = WORDS.filter((w) => w.kind !== 'target' && w.kind !== 'black').map((w) => w.id);
+  it('対象語と黒・白の言葉以外のすべての言葉が並ぶ', () => {
+    const ids = WORDS.filter((w) => w.kind !== 'target' && w.kind !== 'black' && w.kind !== 'white').map((w) => w.id);
     expect(report.words.map((w) => w.id)).toEqual(ids);
   });
   it('言葉を抜いた呪文と比べて、得になった場面を数える', () => {
