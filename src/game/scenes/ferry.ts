@@ -1,4 +1,4 @@
-// 大川の渡し場：渡し舟の船頭が腰を痛めていて、川を渡れない
+// 激流の渡し場：渡し舟の船頭が腰を痛めていて、川を渡れない
 
 import { isAttack, isEmpty } from '../parse';
 import { emptyOutcome, outcome, REGRET_LINE, type Outcome, type SceneDef } from '../scene';
@@ -14,38 +14,40 @@ function crossed(o: Outcome, summary: string, discovery: string, ...lines: strin
 function swam(o: Outcome, ...lines: string[]): Outcome {
   o.hearts -= 1;
   o.log.push(...lines, 'しかたなく泳いで渡った。体が冷えて、ハートを1つ失った。');
-  o.summary = '大川を泳いで渡った';
+  o.summary = '激流を泳いで渡った';
   return o;
 }
 
 export const ferry: SceneDef = {
   id: 'ferry',
-  title: '大川の渡し場',
+  title: '激流の渡し場',
   kind: 'event',
   intro: () => ['大きな川の渡し場に着いた。', '船頭「いてて……腰をやっちまって、今日は舟を出せねえんだ」'],
   objects: () => [
-    { id: 'river', label: '🌊 大川', keyword: '大川', desc: '流れは速いが、深くはなさそう。', color: '#bfe0f0' },
+    { id: 'river', label: '🌊 激流', keyword: '激流', desc: '流れは速いが、深くはなさそう。', color: '#bfe0f0' },
     { id: 'boat', label: '🛶 渡し舟', keyword: '渡し舟', desc: 'ロープで向こう岸の杭とつながっている。', color: '#d8c3a5' },
     { id: 'boatman', label: '🧔 船頭', keyword: '船頭', desc: '腰をさすっている。', color: '#e8d7b5' },
   ],
   resolve(spell, ctx) {
     const o = emptyOutcome();
     if (isEmpty(spell)) return outcome(swam(o, '呪文は何も起こさなかった。'));
-    const target = spell.target ?? (spell.supports.includes('heal') && !isAttack(spell) ? 'boatman' : 'river');
+    // ここに小川はないので、「川」「水」は激流のこと
+    const said = spell.target === 'stream' ? 'river' : spell.target;
+    const target = said ?? (spell.supports.includes('heal') && !isAttack(spell) ? 'boatman' : 'river');
 
     switch (target) {
       case 'river':
         if (spell.elements.includes('ice') || spell.tricks.includes('frost')) {
           o.gainWords.push('frost');
-          return outcome(crossed(o, '大川を凍らせて歩いて渡った', '氷・霜×大川：凍って歩いて渡れる',
-            '大川の表面がみるみる凍っていく。', '氷の上を歩いて向こう岸へ渡った。船頭「たまげたなあ！」'));
+          return outcome(crossed(o, '激流を凍らせて歩いて渡った', '氷・霜×激流：凍って歩いて渡れる',
+            '激流の表面がみるみる凍っていく。', '氷の上を歩いて向こう岸へ渡った。船頭「たまげたなあ！」'));
         }
         if (spell.shapes.includes('wall') && spell.elements.includes('earth')) {
-          return outcome(crossed(o, '土の壁で大川に橋をかけた', '土の壁×大川：橋になる',
+          return outcome(crossed(o, '土の壁で激流に橋をかけた', '土の壁×激流：橋になる',
             '川底から土の壁がせり上がり、向こう岸まで続く道になった。'));
         }
         if (spell.shapes.includes('wall')) {
-          o.discoveries.push('壁×大川：流されてしまう（土なら残るかも）');
+          o.discoveries.push('壁×激流：流されてしまう（土なら残るかも）');
           return outcome(swam(o, '壁は流れに押し流されてしまった。'));
         }
         return outcome(swam(o, '川面に呪文が落ちたが、流れは変わらない。'));

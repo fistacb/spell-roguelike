@@ -91,7 +91,7 @@ export const WORDS: Word[] = [
   { id: 'rock', text: '岩', kind: 'target', target: 'rock' },
   { id: 'girl', text: '女の子', kind: 'target', target: 'girl', aliases: ['少女'] },
   { id: 'tree', text: '木', kind: 'target', target: 'tree', aliases: ['枯れ木', '枯木', '大木'] },
-  { id: 'stream', text: '川', kind: 'target', target: 'stream', aliases: ['小川', '谷川'] },
+  { id: 'stream', text: '川', kind: 'target', target: 'stream', aliases: ['小川', '谷川', '水'] },
   { id: 'imp', text: '小鬼', kind: 'target', target: 'imp', aliases: ['鬼'] },
   { id: 'self', text: '自分', kind: 'target', target: 'self', aliases: ['私', '僕'] },
   // その場面の敵を指す
@@ -109,7 +109,7 @@ export const WORDS: Word[] = [
   { id: 'crow', text: 'カラス', kind: 'target', target: 'crow', aliases: ['烏', 'からす'] },
   { id: 'scarecrow', text: 'かかし', kind: 'target', target: 'scarecrow', aliases: ['案山子', 'カカシ'] },
   { id: 'field', text: '麦畑', kind: 'target', target: 'field', aliases: ['畑', '麦'] },
-  { id: 'river', text: '大川', kind: 'target', target: 'river' },
+  { id: 'river', text: '激流', kind: 'target', target: 'river', aliases: ['大川'] },
   { id: 'boat', text: '渡し舟', kind: 'target', target: 'boat', aliases: ['舟', '船'] },
   { id: 'boatman', text: '船頭', kind: 'target', target: 'boatman', aliases: ['船頭さん'] },
   { id: 'fog', text: '霧', kind: 'target', target: 'fog' },

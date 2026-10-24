@@ -99,6 +99,7 @@ function mountGame(state: RunState) {
       <span class="counter" id="counter"></span>
       <button class="primary" id="cast">詠唱</button>
     </form>
+    <div class="bubble" id="bubble" role="tooltip" hidden></div>
     <div id="modal"></div>`;
   const input = document.getElementById('spell') as HTMLInputElement;
   input.addEventListener('input', renderCounter);
@@ -106,11 +107,23 @@ function mountGame(state: RunState) {
     e.preventDefault();
     doCast(input.value);
   });
+  // 吹き出しの外をタップするか、カードの列を動かしたら吹き出しを閉じる
+  document.getElementById('cards')!.addEventListener('scroll', closeBubble);
+  app.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('.card')) closeBubble();
+  });
   renderGame();
+}
+
+function closeBubble() {
+  if (!selectedCard) return;
+  selectedCard = null;
+  renderBubble();
 }
 
 function doCast(text: string) {
   if (!run) return;
+  selectedCard = null;
   const before = run.phase;
   const result = cast(run, text);
   errorText = result.error ?? '';
@@ -193,11 +206,6 @@ function renderObjects() {
 
 function renderInfo() {
   const el = document.getElementById('info')!;
-  if (selectedCard && run!.owned.includes(selectedCard)) {
-    const w = wordById(selectedCard);
-    el.innerHTML = `<div class="info"><b>${esc(w.text)}</b>：${esc(wordHint(w))}</div>`;
-    return;
-  }
   const obj = sceneObjects().find((o) => o.id === selectedObject);
   if (!obj) {
     el.innerHTML = '';
@@ -244,17 +252,41 @@ function renderCards() {
   el.innerHTML = run!.owned
     .map((id) => {
       const w = wordById(id);
-      return `<button type="button" class="card ${w.kind === 'black' ? 'black' : ''}" data-id="${id}" style="--card-color:${wordColor(w)}">${esc(w.text)}</button>`;
+      return `<button type="button" class="card ${w.kind === 'black' ? 'black' : ''}${id === selectedCard ? ' selected' : ''}" data-id="${id}" style="--card-color:${wordColor(w)}">${esc(w.text)}</button>`;
     })
     .join('');
-  // カードをタップすると、その言葉の手触りを表示する
+  // カードをタップすると、その言葉の手触りをカードの上に吹き出しで出す
   el.querySelectorAll<HTMLButtonElement>('.card').forEach((card) => {
     card.onclick = () => {
       selectedCard = selectedCard === card.dataset.id ? null : card.dataset.id!;
-      selectedObject = null;
-      renderInfo();
+      renderBubble();
     };
   });
+  renderBubble();
+}
+
+function renderBubble() {
+  const bubble = document.getElementById('bubble');
+  if (!bubble) return;
+  document.querySelectorAll('.card.selected').forEach((c) => c.classList.remove('selected'));
+  const card = selectedCard && run!.owned.includes(selectedCard)
+    ? document.querySelector<HTMLElement>(`.card[data-id="${selectedCard}"]`) : null;
+  if (!card) {
+    bubble.hidden = true;
+    return;
+  }
+  card.classList.add('selected');
+  const w = wordById(selectedCard!);
+  bubble.innerHTML = `<b>${esc(w.text)}</b>　${esc(wordHint(w))}`;
+  bubble.hidden = false;
+  // カードの真上に置き、画面の端からはみ出さないようにする
+  const r = card.getBoundingClientRect();
+  const width = bubble.offsetWidth;
+  const center = r.left + r.width / 2;
+  const left = Math.min(Math.max(8, center - width / 2), window.innerWidth - width - 8);
+  bubble.style.left = `${left}px`;
+  bubble.style.bottom = `${window.innerHeight - r.top + 10}px`;
+  bubble.style.setProperty('--arrow-x', `${center - left}px`);
 }
 
 function glowCards(ids: string[]) {

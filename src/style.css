@@ -147,3 +147,26 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .forget { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .page ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 .taboo { color: var(--danger); }
+
+/* 言葉カードの吹き出し */
+.card.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+.bubble {
+  position: fixed;
+  z-index: 20;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: calc(var(--arrow-x, 50%) - 7px);
+  border: 7px solid transparent;
+  border-top-color: var(--panel);
+}
