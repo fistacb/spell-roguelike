@@ -20,6 +20,8 @@ export interface Spell {
   pure: boolean;
   target: TargetId | null;
   regret: boolean;
+  // 覚悟：力が増すが、痛まない
+  resolve: boolean;
   // 発動に使われたワード（カード発光の順番）
   usedWordIds: string[];
 }
@@ -100,6 +102,7 @@ export function parseSpell(input: string, owned: ReadonlySet<string>): Spell {
     pure: false,
     target: null,
     regret: false,
+    resolve: false,
     usedWordIds: [],
   };
 
@@ -128,6 +131,9 @@ export function parseSpell(input: string, owned: ReadonlySet<string>): Spell {
         break;
       case 'black':
         spell.regret = true;
+        break;
+      case 'white':
+        spell.resolve = true;
         break;
       case 'target':
         // 最初に出てきた対象を採用する

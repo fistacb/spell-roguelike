@@ -132,7 +132,8 @@ export function sceneAppearance(runs = 2000): Record<string, number> {
 }
 
 export function buildUsageReport(): UsageReport {
-  const words = WORDS.filter((w) => w.kind !== 'target' && w.kind !== 'black');
+  // 黒と白の言葉は、旅の進行（run.ts）でほかの言葉に上乗せされるので数えない
+  const words = WORDS.filter((w) => w.kind !== 'target' && w.kind !== 'black' && w.kind !== 'white');
   const owned = new Set(words.map((w) => w.id));
   const scenes: SceneDef[] = [...Object.values(SCENES), makeCrossroads(OPENABLE_REGIONS)];
   const appearance = sceneAppearance();

@@ -1,6 +1,6 @@
 // 1回の旅（ラン）の進行：3つのステージを進む。ステージの終わりには宿と分かれ道があり、最後に旅の記録
 
-import { parseSpell, type Spell } from './parse';
+import { isAttack, parseSpell, type Spell } from './parse';
 import { pick, type Flags, type Intent, type Rng, type SceneDef } from './scene';
 import { buildStage, SCENES, STAGE_COUNT } from './scenes';
 import { makeCrossroads } from './scenes/crossroads';
@@ -15,6 +15,8 @@ export const START_HEARTS = 3;
 export const MAX_HEARTS = 5;
 // 宿で回復するハート
 export const INN_HEARTS = 1;
+// 禁忌がこの数たまると、魔王になって旅が終わる
+export const TABOO_LIMIT = 3;
 
 export interface SceneRecord {
   title: string;
@@ -25,7 +27,7 @@ export interface SceneRecord {
 export interface RunState {
   // fork：ステージの終わりの分かれ道
   phase: 'scene' | 'fork' | 'record';
-  result: 'complete' | 'tired' | null;
+  result: 'complete' | 'tired' | 'demon' | null;
   hearts: number;
   owned: string[];
   charLimit: number;
@@ -150,7 +152,9 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   }
 
   const scene = currentScene(run);
-  const result = scene.resolve(spell, { flags: run.flags, warned: run.warned, intent: run.intent, rng });
+  // 出来事の場面では、後悔と覚悟は「強化」のように働く。攻撃を攻撃でなくしてしまわないよう、攻撃には足さない
+  const strong = scene.kind === 'event' && (spell.regret || spell.resolve) && !spell.supports.includes('boost') && !isAttack(spell);
+  const result = scene.resolve(strong ? { ...spell, supports: [...spell.supports, 'boost'] } : spell, { flags: run.flags, warned: run.warned, intent: run.intent, rng });
   if (result.kind === 'warning') {
     return { run: { ...run, warned: true }, spell, warning: result.message };
   }
@@ -160,19 +164,36 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   let owned = run.owned;
   let gainedWords = run.gainedWords;
   let taboos = run.taboos;
-  const log = [...run.log, `▶ ${spell.input}`, ...unownedNotes(spell), ...o.log, ...fizzleNotes(spell, [...o.log, ...o.discoveries])];
+  let heartGain = o.hearts;
+  const log = [...run.log, `▶ ${spell.input}`, ...unownedNotes(spell)];
+  if (strong) {
+    log.push(spell.regret ? '「後悔」にすがると、呪文がぐっと重く、強くなった。' : '「覚悟」が呪文を静かに後押しした。');
+  }
+  log.push(...o.log, ...fizzleNotes(spell, [...o.log, ...o.discoveries]));
+  if (scene.kind === 'event' && spell.regret) {
+    heartGain -= 1;
+    log.push('「後悔」が胸を締めつける。ハートを1つ失った。');
+  }
   if (o.gainRegret) {
     if (owned.includes('regret')) {
-      taboos = [...taboos, `禁忌：${o.summary}`];
-      log.push(`「後悔」が黒く重くなった……。禁忌がついた（${o.summary}）。`);
+      taboos = [...taboos, o.summary];
+      log.push(`「後悔」が黒く重くなった……。禁忌がついた（${o.summary}）。`,
+        `禁忌の重みで、ハートの上限が1つ減った（禁忌 ${taboos.length}/${TABOO_LIMIT}。${TABOO_LIMIT}つたまると魔王になる）。`);
     } else {
       owned = [...owned, 'regret'];
       gainedWords = [...gainedWords, 'regret'];
+      log.push('悪いことを重ねると禁忌がつく。この後悔にすがってだれかを助けられたら、乗りこえられるかもしれない。');
     }
+  }
+  // 後悔にすがって誰かを助けられたら、後悔は覚悟に変わる（戦闘の結果には、後悔の痛みがすでに入っている）
+  const helped = o.reward !== null || o.hearts + (scene.kind === 'battle' ? 1 : 0) > 0;
+  if (spell.regret && run.phase === 'scene' && !o.gainRegret && helped && owned.includes('regret')) {
+    owned = [...owned.filter((id) => id !== 'regret' && id !== 'resolve'), 'resolve'];
+    if (!gainedWords.includes('resolve')) gainedWords = [...gainedWords, 'resolve'];
+    log.push('後悔にすがったこの手で、だれかを助けることができた。', '✦ 「後悔」が「覚悟」に変わった！');
   }
 
   // 出来事の言葉と、お礼の言葉
-  let heartGain = o.hearts;
   for (const id of o.gainWords) {
     if (owned.includes(id)) continue;
     owned = [...owned, id];
@@ -199,7 +220,7 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
     }
   }
 
-  const hearts = Math.max(0, Math.min(MAX_HEARTS, run.hearts + heartGain));
+  const hearts = Math.max(0, Math.min(maxHearts(taboos), run.hearts + heartGain));
   const next: RunState = {
     ...run,
     hearts,
@@ -213,6 +234,9 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
     log,
   };
 
+  if (taboos.length >= TABOO_LIMIT) {
+    return { spell, run: { ...next, phase: 'record', result: 'demon', log: [...log, '胸の奥の黒いものが、すべてを飲みこんだ。'] } };
+  }
   if (hearts <= 0) {
     return { spell, run: { ...next, phase: 'record', result: 'tired', log: [...log, 'ハートがなくなった。'] } };
   }
@@ -233,10 +257,16 @@ export function cast(run: RunState, input: string, rng: Rng = Math.random): Cast
   }
 
   // ステージの終わり：宿に泊まってから分かれ道へ
-  const rested = Math.min(MAX_HEARTS, hearts + INN_HEARTS);
+  const rested = Math.min(maxHearts(taboos), hearts + INN_HEARTS);
   log.push('◆ 宿屋', `${regionName(run)}を抜けて、宿に泊まった。`,
-    rested > hearts ? `ぐっすり眠って、ハートが${rested - hearts}つ回復した。` : 'ぐっすり眠った。', '（ここまでの旅を記録した）');
+    rested > hearts ? `ぐっすり眠って、ハートが${rested - hearts}つ回復した。` : 'ぐっすり眠った。');
+  log.push('（ここまでの旅を記録した）');
   return { spell, run: enterFork({ ...next, hearts: rested }) };
+}
+
+/** 禁忌がつくたびに、ハートの上限が1つ減る */
+export function maxHearts(taboos: string[]): number {
+  return MAX_HEARTS - taboos.length;
 }
 
 export function handSize(owned: string[]): number {
@@ -270,5 +300,6 @@ function unownedNotes(spell: Spell): string[] {
 
 export function endingMessage(run: RunState): string {
   if (run.result === 'complete') return '君は新しい旅に出ることにした！';
+  if (run.result === 'demon') return '君は禁忌を重ね、魔王になった……。';
   return '君は疲れたので故郷に帰ることにした。';
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cast, currentScene, forget, handSize, INN_HEARTS, MAX_HEARTS, newRun, START_CHAR_LIMIT, START_HEARTS, type RunState } from '../src/game/run';
+import { cast, currentScene, endingMessage, forget, handSize, INN_HEARTS, MAX_HEARTS, maxHearts, newRun, START_CHAR_LIMIT, START_HEARTS, TABOO_LIMIT, type RunState } from '../src/game/run';
 import { buildStage, SCENES, STAGE_COUNT, STAGE_LENGTH } from '../src/game/scenes';
 import { REGIONS } from '../src/game/scenes/regions';
 import { FIZZLE, HAND_LIMIT, STARTING_WORDS } from '../src/game/words';
@@ -187,5 +187,66 @@ describe('空振りの一言', () => {
     run = { ...run, owned: [...run.owned, 'ash'] };
     run = cast(run, '灰').run;
     expect(run.log).not.toContain(FIZZLE.ash.line);
+  });
+});
+
+describe('後悔・覚悟・禁忌', () => {
+  it('禁忌がつくとハートの上限が1つ減る', () => {
+    const run = play(newRun(first, stage1), ['枯れ木に炎', '炎槍', '納屋に炎']);
+    expect(run.taboos).toHaveLength(1);
+    expect(maxHearts(run.taboos)).toBe(MAX_HEARTS - 1);
+    expect(run.log.some((l) => l.includes('ハートの上限が1つ減った'))).toBe(true);
+  });
+
+  it(`禁忌が${TABOO_LIMIT}つたまると魔王になって旅が終わる`, () => {
+    let run = newRun(first, ['barn', 'crows', 'valley', 'fog', 'fox']);
+    run = { ...run, owned: [...run.owned, 'regret'], taboos: ['a', 'b'] };
+    run = cast(run, '納屋に炎').run;
+    expect(run.phase).toBe('record');
+    expect(run.result).toBe('demon');
+    expect(endingMessage(run)).toContain('魔王');
+  });
+
+  it('後悔は出来事の場面でも強化のように効き、そのたびにハートが1つ減る', () => {
+    const base = newRun(first, ['barn', 'crows', 'valley', 'fog', 'fox']);
+    const run = cast({ ...base, owned: [...base.owned, 'regret'] }, '村人に後悔').run;
+    expect(cast(base, '村人に').run.records[0].summary).not.toBe('納屋の火事を消した');
+    expect(run.records[0].summary).toBe('納屋の火事を消した');
+    expect(run.log.some((l) => l.includes('「後悔」にすがると'))).toBe(true);
+    expect(run.log.some((l) => l.includes('胸を締めつける'))).toBe(true);
+  });
+
+  it('攻撃に後悔を足しても、攻撃のまま', () => {
+    const base = newRun(first, ['watermill', 'crows', 'valley', 'fog', 'fox']);
+    const run = cast({ ...base, owned: [...base.owned, 'regret'], warned: true }, '粉屋に炎後悔').run;
+    expect(run.taboos).toHaveLength(1);
+  });
+
+  it('後悔にすがってだれかを助けると、その場で覚悟に変わる', () => {
+    const base = newRun(first, ['barn', 'crows', 'valley', 'fog', 'fox']);
+    const run = cast({ ...base, owned: [...base.owned, 'regret'] }, '納屋に氷後悔').run;
+    expect(run.owned).toContain('resolve');
+    expect(run.owned).not.toContain('regret');
+  });
+
+  it('助けられなければ、後悔のまま', () => {
+    const base = newRun(first, ['barn', 'crows', 'valley', 'fog', 'fox']);
+    const run = cast({ ...base, owned: [...base.owned, 'regret'] }, '納屋に槍後悔').run;
+    expect(run.owned).toContain('regret');
+    expect(run.owned).not.toContain('resolve');
+  });
+
+  it('後悔を唱えずに助けても、覚悟にはならない', () => {
+    const base = newRun(first, ['barn', 'crows', 'valley', 'fog', 'fox']);
+    const run = cast({ ...base, owned: [...base.owned, 'regret'] }, '納屋に氷').run;
+    expect(run.owned).toContain('regret');
+  });
+
+  it('覚悟は出来事でも戦闘でも力になり、ハートは減らない', () => {
+    const base = newRun(first, ['barn', 'crows', 'valley', 'fog', 'fox']);
+    const plain = cast(base, '納屋に氷').run;
+    const withResolve = cast({ ...base, owned: [...base.owned, 'resolve'] }, '納屋に氷覚悟').run;
+    expect(withResolve.hearts).toBe(plain.hearts);
+    expect(handSize([...STARTING_WORDS, 'resolve'])).toBe(STARTING_WORDS.length);
   });
 });

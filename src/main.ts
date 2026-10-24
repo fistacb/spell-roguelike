@@ -1,6 +1,6 @@
 import './style.css';
 import { countLength } from './game/parse';
-import { cast, currentScene, endingMessage, forget, MAX_HEARTS, newRun, regionName, type RunState } from './game/run';
+import { cast, currentScene, endingMessage, forget, MAX_HEARTS, maxHearts, newRun, regionName, TABOO_LIMIT, type RunState } from './game/run';
 import { STAGE_COUNT } from './game/scenes';
 import type { SceneObject } from './game/scene';
 import { addRun, clearJourney, emptySave, loadJourney, loadSave, writeJourney, writeSave, type SaveData } from './game/save';
@@ -12,6 +12,7 @@ let run: RunState | null = null;
 let selectedObject: string | null = null;
 let selectedCard: string | null = null;
 let pendingWarning: { input: string; message: string } | null = null;
+let showTaboos = false;
 let errorText = '';
 
 // スマホのキーボードが出ても入力欄が隠れないよう、見えている高さに合わせる
@@ -125,6 +126,7 @@ function doCast(text: string) {
   if (!run) return;
   selectedCard = null;
   const before = run.phase;
+  const taboosBefore = run.taboos.length;
   const result = cast(run, text);
   errorText = result.error ?? '';
   run = result.run;
@@ -139,6 +141,8 @@ function doCast(text: string) {
   }
   (document.getElementById('spell') as HTMLInputElement).value = '';
   selectedObject = null;
+  // 禁忌がついたら、その場で知らせる
+  if (run.phase !== 'record' && run.taboos.length > taboosBefore) showTaboos = true;
   renderGame();
   glowCards(result.spell?.usedWordIds ?? []);
   // 宿に着いたら、途中の旅を記録する
@@ -172,8 +176,9 @@ function renderGame() {
   renderModal();
 }
 
-function hearts(n: number): string {
-  return '♥'.repeat(n) + '♡'.repeat(Math.max(0, MAX_HEARTS - n));
+// 禁忌で失った上限の分は ✕ で表す
+function hearts(n: number, max = MAX_HEARTS): string {
+  return '♥'.repeat(n) + '♡'.repeat(Math.max(0, max - n)) + '✕'.repeat(Math.max(0, MAX_HEARTS - max));
 }
 
 function renderHud() {
@@ -181,9 +186,17 @@ function renderHud() {
   const scene = currentScene(r);
   document.getElementById('hud')!.innerHTML = `
     <span class="scene-name">${esc(scene.title)}</span>
-    <span class="hearts" aria-label="ハート${r.hearts}つ">${hearts(r.hearts)}</span>
+    <span class="hearts" aria-label="ハート${r.hearts}つ">${hearts(r.hearts, maxHearts(r.taboos))}</span>
+    ${r.taboos.length ? `<button type="button" class="taboo-mark" id="taboo-mark">禁忌 ${r.taboos.length}/${TABOO_LIMIT}</button>` : ''}
     <span>ステージ${r.stage + 1}/${STAGE_COUNT} ${esc(regionName(r))}${r.phase === 'fork' ? '' : ` ${Math.min(r.index + 1, r.sceneIds.length)}/${r.sceneIds.length}`}</span>
     <span>上限 ${r.charLimit}文字</span>`;
+  const mark = document.getElementById('taboo-mark');
+  if (mark) {
+    mark.onclick = () => {
+      showTaboos = true;
+      renderModal();
+    };
+  }
 }
 
 function sceneObjects(): SceneObject[] {
@@ -252,7 +265,7 @@ function renderCards() {
   el.innerHTML = run!.owned
     .map((id) => {
       const w = wordById(id);
-      return `<button type="button" class="card ${w.kind === 'black' ? 'black' : ''}${id === selectedCard ? ' selected' : ''}" data-id="${id}" style="--card-color:${wordColor(w)}">${esc(w.text)}</button>`;
+      return `<button type="button" class="card ${w.kind === 'black' ? 'black' : w.kind === 'white' ? 'white' : ''}${id === selectedCard ? ' selected' : ''}" data-id="${id}" style="--card-color:${wordColor(w)}">${esc(w.text)}</button>`;
     })
     .join('');
   // カードをタップすると、その言葉の手触りをカードの上に吹き出しで出す
@@ -326,6 +339,10 @@ function renderModal() {
     renderForget(el);
     return;
   }
+  if (showTaboos && run && run.phase !== 'record') {
+    renderTaboos(el);
+    return;
+  }
   if (!pendingWarning) {
     el.innerHTML = '';
     return;
@@ -343,6 +360,21 @@ function renderModal() {
     pendingWarning = null;
     renderModal();
     doCast(text);
+  };
+}
+
+// 背負った禁忌と、その重み
+function renderTaboos(el: HTMLElement) {
+  const r = run!;
+  el.innerHTML = `<div class="modal-back"><div class="modal">
+    <div><b>禁忌 ${r.taboos.length}/${TABOO_LIMIT}</b></div>
+    <ul class="taboo">${r.taboos.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+    <div>禁忌がつくたびに、ハートの上限が1つ減る（いまの上限は${maxHearts(r.taboos)}つ）。${TABOO_LIMIT}つたまると、魔王になってしまう。</div>
+    <div class="buttons"><button class="primary" id="taboo-close">とじる</button></div>
+  </div></div>`;
+  document.getElementById('taboo-close')!.onclick = () => {
+    showTaboos = false;
+    renderModal();
   };
 }
 
@@ -374,7 +406,7 @@ function showRecord(finished: RunState) {
   app.innerHTML = `
     <div class="page">
       <p class="ending">${esc(endingMessage(finished))}</p>
-      <p class="hearts big">${hearts(finished.hearts)}</p>
+      <p class="hearts big">${hearts(finished.hearts, maxHearts(finished.taboos))}</p>
       <section>
         <h2>旅の道のり</h2>
         <ol>${finished.records.map((r) => `<li><b>${esc(r.title)}</b>「${esc(r.spell)}」<br>${esc(r.summary)}</li>`).join('')}</ol>
@@ -382,7 +414,7 @@ function showRecord(finished: RunState) {
       <section>
         <h2>今回見つけた言葉</h2>
         ${gained.length ? `<ul>${gained.map((g) => `<li>${esc(g)}</li>`).join('')}</ul>` : '<p>なし</p>'}
-        ${finished.taboos.length ? `<ul class="taboo">${finished.taboos.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+        ${finished.taboos.length ? `<h2>背負った禁忌</h2><ul class="taboo">${finished.taboos.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
       </section>
       <section>
         <h2>新しい発見</h2>

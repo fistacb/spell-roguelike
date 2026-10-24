@@ -157,6 +157,7 @@ export function spellMultiplier(spell: Spell): number {
   if (spell.supports.includes('boost') && (spell.target === null || spell.target === 'self' || spell.target === 'enemy')) mult *= 1.5;
   if (spell.supports.includes('echo')) mult *= 2;
   if (spell.regret) mult *= 2;
+  if (spell.resolve) mult *= 1.5;
   return mult;
 }
 
@@ -182,6 +183,7 @@ export function fight(spell: Spell, opts: FightOptions): FightResult {
     r.hearts -= 1;
     r.log.push('「後悔」が胸を締めつける。呪文の力が倍になったが、ハートを1つ失った。');
   }
+  if (spell.resolve) r.log.push('「覚悟」が呪文を静かに支えた。');
 
   let captured = false;
   if (targetsEnemy(spell, enemy)) {
